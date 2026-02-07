@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Каса — Продаж квитків</title>
+  <title>Каса — Продаж квитків (офлайн)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../../styles.css">
@@ -11,64 +11,63 @@
     html, body {
       height: 100%;
       margin: 0;
-      background: #0f172a;
+      background: #f8fafc;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* ===== ВЕРХНЯЯ ПАНЕЛЬ КАССЫ ===== */
-    .cash-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
+    .layout {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-      padding: 10px 14px;
+    /* Верхняя панель кассы */
+    .cash-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
       background: #020617;
       color: #fff;
-      border-bottom: 1px solid #1e293b;
-    }
-
-    .cash-topbar-left {
+      padding: 10px 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .cash-topbar select {
+    .cash-top label {
+      font-size: 14px;
+      opacity: .85;
+    }
+
+    .cash-top select {
       padding: 6px 10px;
+      font-size: 15px;
       border-radius: 8px;
-      border: 1px solid #334155;
-      background: #020617;
-      color: #fff;
+      border: none;
+      min-width: 320px;
     }
 
-    .cash-topbar button {
+    .cash-top button {
+      margin-left: auto;
       padding: 6px 14px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       font-weight: 700;
     }
 
-    .btn-change {
-      background: #111827;
-      color: #fff;
-    }
-
     .btn-reports {
-      background: #1e293b;
+      background: #334155;
       color: #fff;
     }
 
-    /* ===== ОСНОВНАЯ ОБЛАСТЬ ===== */
-    .layout {
-      height: calc(100vh - 52px);
-    }
-
+    /* iframe со схемой */
     .hall-wrap {
-      background: #f8fafc;
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 0;
+      padding-top: 52px; /* место под верхнюю панель */
     }
 
     iframe {
@@ -82,52 +81,66 @@
 
 <body>
 
-<!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
-<div class="cash-topbar">
-  <div class="cash-topbar-left">
-    <label>
-      Сеанс:
-      <select id="seanceSelect"></select>
-    </label>
-    <button class="btn-change" id="changeSeanceBtn">Змінити</button>
-  </div>
-
-  <button class="btn-reports" id="reportsBtn">Звіти</button>
-</div>
-
-<!-- ===== ЗАЛ ===== -->
 <div class="layout">
-  <div class="hall-wrap">
-    <iframe src="../../hall/hall-cash.html?mode=cash"></iframe>
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ КАССЫ -->
+  <div class="cash-top">
+    <label>Сеанс:</label>
+    <select id="seanceSelect">
+      <option value="">Завантаження…</option>
+    </select>
+
+    <button class="btn-reports" onclick="openReports()">Звіти</button>
   </div>
+
+  <!-- ЗАЛ -->
+  <div class="hall-wrap">
+    <iframe id="hallFrame" src="../../hall/hall-cash.html"></iframe>
+  </div>
+
 </div>
 
 <script>
-  // ВРЕМЕННО: локальный список
-  const seances = [
-    { id: "koncert-2026-02-10-19-00", title: "Концерт — 10.02.2026 19:00" },
-    { id: "vistava-2026-02-11-18-00", title: "Вистава — 11.02.2026 18:00" }
-  ];
+const SEANCES_PATH = "../../data/seances/";
 
-  const select = document.getElementById("seanceSelect");
+const seanceSelect = document.getElementById("seanceSelect");
+const hallFrame = document.getElementById("hallFrame");
 
-  seances.forEach(s => {
+// список сеансов — пока вручную, потом можно автоген
+const SEANCES = [
+  "koncert-2026-02-10-19-00"
+];
+
+// загрузка списка
+function loadSeances() {
+  seanceSelect.innerHTML = `<option value="">Оберіть сеанс…</option>`;
+  SEANCES.forEach(id => {
     const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = s.title;
-    select.appendChild(opt);
+    opt.value = id;
+    opt.textContent = id.replace(/-/g, " ");
+    seanceSelect.appendChild(opt);
   });
+}
 
-  document.getElementById("changeSeanceBtn").onclick = () => {
-    const id = select.value;
-    if (!id) return;
-    // дальше — твоя существующая логика загрузки сеанса в hall-cash
-    console.log("Змінити сеанс:", id);
-  };
+// смена сеанса
+seanceSelect.addEventListener("change", () => {
+  const seanceId = seanceSelect.value;
+  if (!seanceId) return;
 
-  document.getElementById("reportsBtn").onclick = () => {
-    window.open("../../reports/index.html", "_blank");
-  };
+  // передаём seance_id в hall-cash
+  hallFrame.contentWindow.postMessage({
+    type: "SET_SEANCE",
+    seance_id: seanceId,
+    source: "offline-cash"
+  }, "*");
+});
+
+// отчёты
+function openReports() {
+  window.open("../../reports/index.html", "_blank");
+}
+
+loadSeances();
 </script>
 
 </body>
