@@ -1,118 +1,117 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<title>Билетний відділ</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Білетний відділ — офлайн каса</title>
 
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  height:100%;
+html,body{height:100%;margin:0}
+body{overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+
+.container{max-width:1480px;margin:0 auto;padding:12px;height:100vh}
+
+.bo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.bo-title{font-size:20px;font-weight:800;margin:0}
+.bo-tabs{display:flex;gap:10px}
+.tabbtn{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.tabbtn.active{background:#111827;color:#fff}
+
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:12px}
+.row{display:flex;gap:10px;align-items:center}
+
+.field{display:grid;gap:6px}
+.field label{font-size:12px;color:#6b7280}
+.field select{padding:10px;border-radius:12px;border:1px solid #e5e7eb;min-width:320px}
+
+.hallWrap{
+  background:#f3f4f6;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  height:calc(100vh - 180px);
   overflow:hidden;
-  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
 }
-
-.header{
-  height:56px;
-  background:#111827;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 16px;
-}
-
-.header button{
-  background:#1f2937;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:8px 12px;
-  cursor:pointer;
-  font-weight:700;
-}
-
-.header button.active{
-  background:#2563eb;
-}
-
-.main{
-  height:calc(100% - 56px);
-}
-
-iframe{
-  width:100%;
-  height:100%;
-  border:none;
-}
+iframe{width:100%;height:100%;border:0;background:#fff}
+.muted{color:#6b7280;font-size:13px}
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<div class="header">
-  <button id="btnEvents">Події</button>
-  <button id="btnCreate">Створення</button>
-  <button id="btnReports">Звіти</button>
-  <button id="btnDocs">Документи</button>
-</div>
+  <!-- TOP -->
+  <div class="bo-top">
+    <h1 class="bo-title">🎟 Офлайн каса</h1>
+    <div class="bo-tabs">
+      <button class="tabbtn active" data-tab="events">Події</button>
+      <button class="tabbtn" data-tab="create">Створення</button>
+    </div>
+  </div>
 
-<div class="main">
-  <iframe id="frame"></iframe>
+  <!-- EVENTS -->
+  <section class="panel" data-pane="events">
+    <div class="row">
+      <div class="field">
+        <label>Сеанс</label>
+        <select id="showSelect">
+          <option value="">Оберіть сеанс…</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:8px">
+      Продажі виконуються безпосередньо у схемі каси.
+    </p>
+
+    <div class="hallWrap" style="margin-top:10px">
+      <iframe id="cashFrame"></iframe>
+    </div>
+  </section>
+
+  <!-- CREATE -->
+  <section class="panel" data-pane="create" hidden>
+    <p class="muted">
+      Повноцінний редактор seance.json (ціни, кольори, правила).
+    </p>
+
+    <div class="hallWrap" style="margin-top:10px">
+      <iframe src="../seance-editor.html?embed=1"></iframe>
+    </div>
+  </section>
+
 </div>
 
 <script>
-const frame = document.getElementById("frame");
-const qs = new URLSearchParams(location.search);
+/* tabs */
+document.querySelectorAll(".tabbtn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("[data-pane]").forEach(p=>{
+      p.hidden = p.dataset.pane !== btn.dataset.tab;
+    });
+  }
+});
 
-function openPage(url){
-  frame.src = url;
-}
+/* load seances */
+fetch("../data/seances/index.json")
+  .then(r=>r.json())
+  .then(list=>{
+    const sel=document.getElementById("showSelect");
+    list.forEach(s=>{
+      const o=document.createElement("option");
+      o.value=s.id;
+      o.textContent=s.title;
+      sel.appendChild(o);
+    });
+  });
 
-document.getElementById("btnEvents").onclick = ()=>{
-  openPage("events.html");
+/* open hall */
+document.getElementById("showSelect").onchange=e=>{
+  const id=e.target.value;
+  document.getElementById("cashFrame").src =
+    id ? `../hall-cash.html?seance=${id}&embed=1` : "";
 };
-
-document.getElementById("btnCreate").onclick = ()=>{
-  openPage("create.html");
-};
-
-document.getElementById("btnReports").onclick = ()=>{
-  openPage("reports.html");
-};
-
-document.getElementById("btnDocs").onclick = ()=>{
-  openPage("docs.html");
-};
-
-// 🚀 если пришли с Подій → Каса
-if (qs.get("mode") === "cash") {
-  const show   = qs.get("show");
-  const seance = qs.get("seance");
-  openPage(`../cash/hall-cash.html?embed=1&show=${show}&seance=${seance}`);
-} else {
-  openPage("events.html");
-}
 </script>
-<script>
-  document.getElementById("btnEvents").onclick = () => {
-    location.href = "./events/";
-  };
-
-  document.getElementById("btnCreate").onclick = () => {
-    location.href = "./create/";
-  };
-
-  document.getElementById("btnReports").onclick = () => {
-    location.href = "./reports/";
-  };
-
-  document.getElementById("btnDocs").onclick = () => {
-    location.href = "./docs.html";
-  };
-</script>
-
 </body>
 </html>
