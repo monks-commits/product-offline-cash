@@ -2,51 +2,57 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Події — активні сеанси</title>
+<title>Події — білетний відділ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="../styles.css">
 
 <style>
-.page-wrap{padding:20px;max-width:1200px;margin:auto}
-h1{margin-bottom:14px}
-
-.list{display:grid;gap:12px}
-.item{
+.page-wrap{
+  padding:20px;
+  max-width:100%;
+}
+.card{
   background:#fff;
   border-radius:14px;
-  padding:14px 16px;
+  padding:16px;
+  margin-bottom:16px;
   box-shadow:0 4px 14px rgba(0,0,0,.06);
+}
+.row{
   display:flex;
+  gap:12px;
+  flex-wrap:wrap;
   align-items:center;
-  justify-content:space-between;
-  gap:14px;
 }
-.meta{font-size:14px;color:#374151}
-.meta b{font-size:16px;color:#111827}
+h1{margin-bottom:10px}
+h3{margin:0 0 10px}
 
-.actions{display:flex;gap:10px}
-.btn{
-  padding:8px 14px;
-  border-radius:10px;
-  border:none;
-  font-weight:800;
-  cursor:pointer;
+select{
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  min-width:260px;
 }
-.btn-primary{background:#111827;color:#fff}
-.btn-ghost{background:#f3f4f6}
+
 .badge{
   padding:4px 10px;
   border-radius:999px;
   font-size:12px;
-  background:#bbf7d0;
-  color:#14532d;
-  font-weight:700;
+  background:#e5e7eb;
 }
-.empty{
-  padding:30px;
-  text-align:center;
-  opacity:.6;
+
+iframe{
+  width:100%;
+  height:80vh;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  background:#f9fafb;
+}
+
+.hint{
+  font-size:13px;
+  color:#6b7280;
 }
 </style>
 </head>
@@ -56,97 +62,90 @@ h1{margin-bottom:14px}
 <div id="admin-header"></div>
 
 <main class="page-wrap">
-  <h1>🎭 Активні події (готові до продажу)</h1>
 
-  <div id="list" class="list"></div>
+  <h1>🎟 Події</h1>
+
+  <!-- 1. Select seance -->
+  <div class="card">
+    <h3>1️⃣ Активний сеанс</h3>
+
+    <div class="row">
+      <select id="seanceSelect">
+        <option value="">Вибери сеанс…</option>
+      </select>
+
+      <span class="badge">робочий режим</span>
+    </div>
+
+    <p class="hint">
+      Тут відображаються активні сеанси.  
+      Продажі та бронювання виконуються нижче.
+    </p>
+  </div>
+
+  <!-- 2. Hall -->
+  <div class="card">
+    <h3>2️⃣ Продаж квитків</h3>
+
+    <iframe
+      id="hallFrame"
+      src=""
+      title="Схема залу"
+    ></iframe>
+
+    <p class="hint" style="margin-top:10px">
+      Схема залу відкривається у режимі <b>embed</b>.  
+      Продажі, бронювання та друк виконуються безпосередньо тут.
+    </p>
+  </div>
+
 </main>
 
 <script>
-/* =========================
-   CONFIG
-========================= */
-
-// ❗ ЯВНО перечисляем файлы (офлайн-реальность)
-const SEANCES = [
-  "../data/seances/koncert-2026-02-10-19-00.json"
-];
-
-/* =========================
-   LOAD
-========================= */
-const list = document.getElementById("list");
-
-async function loadEvents(){
-  const ready = [];
-
-  for (const url of SEANCES){
-    try{
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.status === "ready"){
-        ready.push(data);
-      }
-    }catch(e){
-      console.warn("Не вдалося завантажити", url);
-    }
-  }
-
-  render(ready);
-}
-
-function render(items){
-  if (!items.length){
-    list.innerHTML = `<div class="empty">Немає готових сеансів</div>`;
-    return;
-  }
-
-  list.innerHTML = items.map(s=>`
-    <div class="item">
-      <div class="meta">
-        <b>${s.event || "Подія"}</b><br>
-        ${s.date} • ${s.time}<br>
-        <small>${s.seance_id}</small>
-      </div>
-
-      <span class="badge">READY</span>
-
-      <div class="actions">
-        <button class="btn btn-primary"
-          onclick="openSales('${s.seance_id}')">
-          Продажі
-        </button>
-
-        <button class="btn btn-ghost"
-          onclick="editSeance('${s.seance_id}')">
-          Редагувати
-        </button>
-      </div>
-    </div>
-  `).join("");
-}
-
-/* =========================
-   ACTIONS
-========================= */
-function openSales(id){
-  location.href = `../sales/?seance=${id}`;
-}
-
-function editSeance(id){
-  location.href = `../create/?edit=${id}`;
-}
-
-/* =========================
-   HEADER
-========================= */
+/* === HEADER === */
 fetch("../index.html")
-  .then(r=>r.text())
-  .then(html=>{
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("admin-header").innerHTML = html;
   });
 
-loadEvents();
+/* === MOCK DATA (LAB ONLY) ===
+   В продуктах будет Supabase / API */
+const seances = [
+  {
+    id: "koncert-2026-02-10-19-00",
+    title: "Концерт • 10.02 • 19:00"
+  },
+  {
+    id: "vistava-2026-02-11-18-00",
+    title: "Вистава • 11.02 • 18:00"
+  }
+];
+
+const select = document.getElementById("seanceSelect");
+const frame  = document.getElementById("hallFrame");
+
+/* populate select */
+seances.forEach(s=>{
+  const o = document.createElement("option");
+  o.value = s.id;
+  o.textContent = s.title;
+  select.appendChild(o);
+});
+
+/* on select */
+select.addEventListener("change", ()=>{
+  const seanceId = select.value;
+  if(!seanceId){
+    frame.src = "";
+    return;
+  }
+
+  /* ВАЖНО:
+     hall.html / hall-cash.html будут подменяться
+     в продуктовых репо */
+  frame.src = `../../hall.html?seance=${encodeURIComponent(seanceId)}&embed=1`;
+});
 </script>
 
 </body>
