@@ -188,12 +188,37 @@ function renderRules(){
   });
 }
 
+
 /* ========= SAVE ========= */
 function saveSeance(){
-  const json = JSON.stringify(seance,null,2);
-  output.textContent = json;
-  console.log("SEANCE:", seance);
-  alert("Сеанс підготовлено (наступний крок — збереження у файл)");
+  if (!seance.seance_id) {
+    alert("Сеанс не заповнений");
+    return;
+  }
+
+  const payload = {
+    seance_id: seance.seance_id,
+    status: seance.status,
+    pricing: seance.pricing || []
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `${payload.seance_id}.json`;
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  console.log("SEANCE SAVED:", payload);
+  alert(`Файл ${filename} збережено`);
 }
 
 /* ========= EVENTS ========= */
