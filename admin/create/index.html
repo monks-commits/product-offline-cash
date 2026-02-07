@@ -14,7 +14,7 @@
   box-shadow:0 4px 14px rgba(0,0,0,.06);
 }
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-label{font-size:13px;color:#374151;display:flex;flex-direction:column}
+label{font-size:13px;color:#374151}
 input,select{
   padding:8px 10px;border-radius:8px;border:1px solid #d1d5db;
 }
@@ -31,16 +31,15 @@ h3{margin:0 0 10px}
   background:#e5e7eb
 }
 .badge.ready{background:#bbf7d0}
-.rule-list{
-  margin-top:10px;font-size:14px
-}
-.rule{
-  padding:6px 0;border-bottom:1px dashed #e5e7eb
+.section-actions{display:flex;gap:10px;flex-wrap:wrap}
+iframe{
+  width:100%;height:520px;border:1px solid #e5e7eb;
+  border-radius:12px;background:#f9fafb
 }
 pre{
-  background:#020617;color:#e5e7eb;
-  padding:12px;border-radius:10px;
-  overflow:auto;font-size:13px
+  background:#0f172a;color:#e5e7eb;
+  padding:12px;border-radius:12px;
+  font-size:12px;overflow:auto
 }
 </style>
 </head>
@@ -50,189 +49,165 @@ pre{
 <div id="admin-header"></div>
 
 <main class="page-wrap">
-<h1>🛠 Створення / редагування сеансу</h1>
+  <h1>🛠 Створення / редагування сеансу</h1>
 
-<!-- 1. Дані сеансу -->
-<div class="card">
-  <h3>1️⃣ Дані сеансу</h3>
+  <!-- 1. DATA -->
+  <div class="card">
+    <h3>1️⃣ Дані сеансу</h3>
 
-  <div class="row">
-    <label>
-      Подія
-      <select id="eventSlug">
-        <option value="">— вибрати —</option>
-        <option value="koncert">koncert</option>
-        <option value="vistava">vistava</option>
-      </select>
-    </label>
+    <div class="row">
+      <label>
+        Подія
+        <input id="eventSlug" placeholder="koncert">
+      </label>
 
-    <label>
-      Дата
-      <input type="date" id="eventDate">
-    </label>
+      <label>
+        Дата
+        <input type="date" id="eventDate">
+      </label>
 
-    <label>
-      Час
-      <input type="time" id="eventTime">
-    </label>
+      <label>
+        Час
+        <input type="time" id="eventTime">
+      </label>
 
-    <label>
-      Seance ID
-      <input type="text" id="seanceId" disabled>
-    </label>
+      <label>
+        Seance ID
+        <input type="text" id="seanceId" disabled>
+      </label>
 
-    <span id="statusBadge" class="badge">чернетка</span>
+      <span id="statusBadge" class="badge">чернетка</span>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <label>
+        Статус
+        <select id="seanceStatus">
+          <option value="draft">Чернетка</option>
+          <option value="ready">Готовий</option>
+        </select>
+      </label>
+    </div>
   </div>
 
-  <div class="row" style="margin-top:10px">
-    <label>
-      Статус
-      <select id="seanceStatus">
-        <option value="draft">Чернетка</option>
-        <option value="ready">Готовий</option>
-      </select>
-    </label>
-  </div>
-</div>
-
-<!-- 2. Правила залу -->
-<div class="card">
-  <h3>2️⃣ Ціни та правила залу</h3>
-
-  <div class="row">
-    <label>
-      Сектор
-      <select id="ruleSector">
-        <option value="parter">Партер</option>
-        <option value="amfi">Амфітеатр</option>
-        <option value="balcon">Балкон</option>
-      </select>
-    </label>
-
-    <label>
-      Ряд від
-      <input type="number" id="rowFrom" min="1">
-    </label>
-
-    <label>
-      Ряд до
-      <input type="number" id="rowTo" min="1">
-    </label>
-
-    <label>
-      Ціна
-      <input type="number" id="price">
-    </label>
-
-    <button class="btn btn-primary" onclick="addRule()">Додати правило</button>
+  <!-- 2. PRICING -->
+  <div class="card">
+    <h3>2️⃣ Ціни та кольори</h3>
+    <iframe id="editorFrame" src="../../seance-editor.html?embed=1"></iframe>
   </div>
 
-  <div class="rule-list" id="rules"></div>
-</div>
+  <!-- 3. SAVE -->
+  <div class="card">
+    <h3>3️⃣ Збереження (офлайн)</h3>
+    <div class="section-actions">
+      <button class="btn btn-primary" onclick="saveToFile()">💾 Зберегти у файл</button>
+      <button class="btn btn-ghost" onclick="backToEvents()">⬅ До подій</button>
+    </div>
 
-<!-- 3. Збереження -->
-<div class="card">
-  <h3>3️⃣ Збереження</h3>
-
-  <button class="btn btn-primary" onclick="saveSeance()">💾 Зберегти (локально)</button>
-
-  <pre id="output"></pre>
-</div>
-
+    <h4 style="margin-top:12px">JSON (поточний стан)</h4>
+    <pre id="output">{}</pre>
+  </div>
 </main>
 
 <script>
-/* ========= STATE ========= */
+/* =====================
+   STATE
+===================== */
 const seance = {
+  seance_id:"",
   event:"",
   date:"",
   time:"",
-  seance_id:"",
   status:"draft",
-  pricing:[]
+  pricing:{},
+  seat_overrides:{}
 };
 
-/* ========= HELPERS ========= */
+const qs = new URLSearchParams(location.search);
+const EDIT_ID = qs.get("seance");
+
+/* =====================
+   HELPERS
+===================== */
 function updateSeanceId(){
-  if(!seance.event || !seance.date || !seance.time) return;
+  if(!seance.event||!seance.date||!seance.time) return;
   const t = seance.time.replace(":","-");
   seance.seance_id = `${seance.event}-${seance.date}-${t}`;
-  document.getElementById("seanceId").value = seance.seance_id;
+  seanceId.value = seance.seance_id;
 }
 
 function updateStatusUI(){
-  const badge = document.getElementById("statusBadge");
-  badge.textContent = seance.status === "ready" ? "готовий" : "чернетка";
-  badge.classList.toggle("ready", seance.status === "ready");
+  statusBadge.textContent = seance.status==="ready"?"готовий":"чернетка";
+  statusBadge.classList.toggle("ready",seance.status==="ready");
+  seanceStatus.value = seance.status;
 }
 
-/* ========= RULES ========= */
-function addRule(){
-  const rule = {
-    sector: ruleSector.value,
-    from: +rowFrom.value,
-    to: +rowTo.value,
-    price: +price.value
-  };
-  seance.pricing.push(rule);
-  renderRules();
+function render(){
+  output.textContent = JSON.stringify(seance,null,2);
 }
 
-function renderRules(){
-  rules.innerHTML = "";
-  seance.pricing.forEach(r=>{
-    const d = document.createElement("div");
-    d.className="rule";
-    d.textContent = `${r.sector}: ряди ${r.from}-${r.to}, ${r.price} грн`;
-    rules.appendChild(d);
-  });
-}
+/* =====================
+   LOAD EXISTING
+===================== */
+async function loadSeance(){
+  if(!EDIT_ID) return;
 
+  try{
+    const data = await fetch(`../../data/seances/${EDIT_ID}.json`).then(r=>r.json());
 
-/* ========= SAVE ========= */
-function saveSeance(){
-  if (!seance.seance_id) {
-    alert("Сеанс не заповнений");
-    return;
+    Object.assign(seance,data);
+
+    eventSlug.value = seance.event||"";
+    eventDate.value = seance.date||"";
+    eventTime.value = seance.time||"";
+    seanceId.value = seance.seance_id||EDIT_ID;
+
+    updateStatusUI();
+    render();
+
+  }catch(e){
+    alert("Не вдалося завантажити сеанс");
+    console.error(e);
   }
-
-  const payload = {
-    seance_id: seance.seance_id,
-    status: seance.status,
-    pricing: seance.pricing || []
-  };
-
-  const json = JSON.stringify(payload, null, 2);
-  const filename = `${payload.seance_id}.json`;
-
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  console.log("SEANCE SAVED:", payload);
-  alert(`Файл ${filename} збережено`);
 }
 
-/* ========= EVENTS ========= */
-eventSlug.onchange = e=>{seance.event=e.target.value;updateSeanceId();}
-eventDate.onchange = e=>{seance.date=e.target.value;updateSeanceId();}
-eventTime.onchange = e=>{seance.time=e.target.value;updateSeanceId();}
-seanceStatus.onchange = e=>{seance.status=e.target.value;updateStatusUI();}
+/* =====================
+   SAVE FILE
+===================== */
+function saveToFile(){
+  render();
+  const blob = new Blob([JSON.stringify(seance,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${seance.seance_id||"seance"}.json`;
+  a.click();
+}
 
-/* ========= HEADER ========= */
+/* =====================
+   EVENTS
+===================== */
+eventSlug.oninput = e=>{seance.event=e.target.value;updateSeanceId();render();}
+eventDate.onchange = e=>{seance.date=e.target.value;updateSeanceId();render();}
+eventTime.onchange = e=>{seance.time=e.target.value;updateSeanceId();render();}
+seanceStatus.onchange = e=>{seance.status=e.target.value;updateStatusUI();render();}
+
+/* =====================
+   NAV
+===================== */
+function backToEvents(){
+  location.href = "../events/index.html";
+}
+
+/* =====================
+   HEADER
+===================== */
 fetch("../index.html")
   .then(r=>r.text())
   .then(html=>admin-header.innerHTML=html);
 
+loadSeance();
 updateStatusUI();
+render();
 </script>
 
 </body>
