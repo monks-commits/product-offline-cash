@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Билетний відділ</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  height:100%;
+  overflow:hidden;
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+}
+
+.header{
+  height:56px;
+  background:#111827;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 16px;
+}
+
+.header button{
+  background:#1f2937;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.header button.active{
+  background:#2563eb;
+}
+
+.main{
+  height:calc(100% - 56px);
+}
+
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <button id="btnEvents">Події</button>
+  <button id="btnCreate">Створення</button>
+  <button id="btnReports">Звіти</button>
+  <button id="btnDocs">Документи</button>
+</div>
+
+<div class="main">
+  <iframe id="frame"></iframe>
+</div>
+
+<script>
+const frame = document.getElementById("frame");
+const qs = new URLSearchParams(location.search);
+
+function openPage(url){
+  frame.src = url;
+}
+
+document.getElementById("btnEvents").onclick = ()=>{
+  openPage("events.html");
+};
+
+document.getElementById("btnCreate").onclick = ()=>{
+  openPage("create.html");
+};
+
+document.getElementById("btnReports").onclick = ()=>{
+  openPage("reports.html");
+};
+
+document.getElementById("btnDocs").onclick = ()=>{
+  openPage("docs.html");
+};
+
+// 🚀 если пришли с Подій → Каса
+if (qs.get("mode") === "cash") {
+  const show   = qs.get("show");
+  const seance = qs.get("seance");
+  openPage(`../cash/hall-cash.html?embed=1&show=${show}&seance=${seance}`);
+} else {
+  openPage("events.html");
+}
+</script>
+<script>
+  document.getElementById("btnEvents").onclick = () => {
+    location.href = "./events/";
+  };
+
+  document.getElementById("btnCreate").onclick = () => {
+    location.href = "./create/";
+  };
+
+  document.getElementById("btnReports").onclick = () => {
+    location.href = "./reports/";
+  };
+
+  document.getElementById("btnDocs").onclick = () => {
+    location.href = "./docs.html";
+  };
+</script>
+
+</body>
+</html>
