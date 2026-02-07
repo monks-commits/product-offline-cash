@@ -1,117 +1,103 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Білетний відділ — офлайн каса</title>
+  <meta charset="UTF-8">
+  <title>Офлайн каса — Адмін</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-html,body{height:100%;margin:0}
-body{overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+  <style>
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:#f3f4f6;
+    }
 
-.container{max-width:1480px;margin:0 auto;padding:12px;height:100vh}
+    header{
+      background:#111827;
+      color:#fff;
+      padding:14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
 
-.bo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.bo-title{font-size:20px;font-weight:800;margin:0}
-.bo-tabs{display:flex;gap:10px}
-.tabbtn{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
-.tabbtn.active{background:#111827;color:#fff}
+    .title{
+      font-size:18px;
+      font-weight:800;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
 
-.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:12px}
-.row{display:flex;gap:10px;align-items:center}
+    .nav{
+      display:flex;
+      gap:10px;
+    }
 
-.field{display:grid;gap:6px}
-.field label{font-size:12px;color:#6b7280}
-.field select{padding:10px;border-radius:12px;border:1px solid #e5e7eb;min-width:320px}
+    .nav a{
+      text-decoration:none;
+      background:#fff;
+      color:#111827;
+      padding:8px 14px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:14px;
+    }
 
-.hallWrap{
-  background:#f3f4f6;
-  border-radius:16px;
-  border:1px solid #e5e7eb;
-  height:calc(100vh - 180px);
-  overflow:hidden;
-}
-iframe{width:100%;height:100%;border:0;background:#fff}
-.muted{color:#6b7280;font-size:13px}
-</style>
+    .nav a.primary{
+      background:#2563eb;
+      color:#fff;
+    }
+
+    main{
+      max-width:1200px;
+      margin:40px auto;
+      padding:0 20px;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:16px;
+      padding:24px;
+      box-shadow:0 4px 14px rgba(0,0,0,.06);
+    }
+
+    h1{
+      margin:0 0 10px;
+    }
+
+    p{
+      color:#6b7280;
+      margin:0;
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
 
-  <!-- TOP -->
-  <div class="bo-top">
-    <h1 class="bo-title">🎟 Офлайн каса</h1>
-    <div class="bo-tabs">
-      <button class="tabbtn active" data-tab="events">Події</button>
-      <button class="tabbtn" data-tab="create">Створення</button>
-    </div>
+<header>
+  <div class="title">
+    🎟 Офлайн каса
   </div>
 
-  <!-- EVENTS -->
-  <section class="panel" data-pane="events">
-    <div class="row">
-      <div class="field">
-        <label>Сеанс</label>
-        <select id="showSelect">
-          <option value="">Оберіть сеанс…</option>
-        </select>
-      </div>
-    </div>
+  <nav class="nav">
+    <!-- ГЛАВНОЕ -->
+    <a href="./events/index.html" class="primary">Події</a>
+    <a href="./create/index.html">Створення</a>
+  </nav>
+</header>
 
-    <p class="muted" style="margin-top:8px">
-      Продажі виконуються безпосередньо у схемі каси.
+<main>
+  <div class="card">
+    <h1>Білетний відділ</h1>
+    <p>
+      Оберіть режим роботи:
+      <br><br>
+      <b>Події</b> — робота з касою (продаж, бронь, друк).<br>
+      <b>Створення</b> — створення та редагування сеансів.
     </p>
+  </div>
+</main>
 
-    <div class="hallWrap" style="margin-top:10px">
-      <iframe id="cashFrame"></iframe>
-    </div>
-  </section>
-
-  <!-- CREATE -->
-  <section class="panel" data-pane="create" hidden>
-    <p class="muted">
-      Повноцінний редактор seance.json (ціни, кольори, правила).
-    </p>
-
-    <div class="hallWrap" style="margin-top:10px">
-      <iframe src="../seance-editor.html?embed=1"></iframe>
-    </div>
-  </section>
-
-</div>
-
-<script>
-/* tabs */
-document.querySelectorAll(".tabbtn").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll("[data-pane]").forEach(p=>{
-      p.hidden = p.dataset.pane !== btn.dataset.tab;
-    });
-  }
-});
-
-/* load seances */
-fetch("../data/seances/index.json")
-  .then(r=>r.json())
-  .then(list=>{
-    const sel=document.getElementById("showSelect");
-    list.forEach(s=>{
-      const o=document.createElement("option");
-      o.value=s.id;
-      o.textContent=s.title;
-      sel.appendChild(o);
-    });
-  });
-
-/* open hall */
-document.getElementById("showSelect").onchange=e=>{
-  const id=e.target.value;
-  document.getElementById("cashFrame").src =
-    id ? `../hall-cash.html?seance=${id}&embed=1` : "";
-};
-</script>
 </body>
 </html>
