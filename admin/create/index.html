@@ -1,206 +1,213 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Створення сеансу</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Створення / редагування сеансу</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 
-  <style>
-    body{
-      margin:0;
-      background:#f1f5f9;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-      color:#0f172a;
-    }
-
-    .page{
-      max-width:1200px;
-      margin:auto;
-      padding:24px;
-    }
-
-    h1{margin:0 0 16px}
-
-    .card{
-      background:#fff;
-      border-radius:14px;
-      padding:16px;
-      margin-bottom:16px;
-      box-shadow:0 4px 14px rgba(0,0,0,.06);
-    }
-
-    .row{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:end;
-    }
-
-    label{
-      font-size:13px;
-      color:#475569;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    input,select{
-      padding:8px 10px;
-      border-radius:8px;
-      border:1px solid #cbd5f5;
-      font-size:14px;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      padding:10px 16px;
-      border-radius:12px;
-      border:none;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .btn-primary{background:#111827;color:#fff}
-    .btn-ghost{background:#e2e8f0}
-
-    iframe{
-      width:100%;
-      height:520px;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      background:#f8fafc;
-    }
-
-    .badge{
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      background:#e5e7eb;
-    }
-  </style>
+<style>
+.page-wrap{padding:20px;max-width:1200px;margin:auto}
+.card{
+  background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+label{font-size:13px;color:#374151;display:flex;flex-direction:column}
+input,select{
+  padding:8px 10px;border-radius:8px;border:1px solid #d1d5db;
+}
+h1{margin-bottom:10px}
+h3{margin:0 0 10px}
+.btn{
+  padding:10px 16px;border-radius:12px;border:none;
+  font-weight:800;cursor:pointer
+}
+.btn-primary{background:#111827;color:#fff}
+.btn-ghost{background:#f3f4f6}
+.badge{
+  padding:4px 10px;border-radius:999px;font-size:12px;
+  background:#e5e7eb
+}
+.badge.ready{background:#bbf7d0}
+.rule-list{
+  margin-top:10px;font-size:14px
+}
+.rule{
+  padding:6px 0;border-bottom:1px dashed #e5e7eb
+}
+pre{
+  background:#020617;color:#e5e7eb;
+  padding:12px;border-radius:10px;
+  overflow:auto;font-size:13px
+}
+</style>
 </head>
 
 <body>
 
-<!-- шапка админа -->
 <div id="admin-header"></div>
 
-<div class="page">
-  <h1>🛠 Створення / редагування сеансу</h1>
+<main class="page-wrap">
+<h1>🛠 Створення / редагування сеансу</h1>
 
-  <!-- 1. Данные сеанса -->
-  <div class="card">
-    <h3>1️⃣ Дані сеансу</h3>
+<!-- 1. Дані сеансу -->
+<div class="card">
+  <h3>1️⃣ Дані сеансу</h3>
 
-    <div class="row">
-      <label>
-        Назва події
-        <input id="title" placeholder="Концерт / Вистава">
-      </label>
+  <div class="row">
+    <label>
+      Подія
+      <select id="eventSlug">
+        <option value="">— вибрати —</option>
+        <option value="koncert">koncert</option>
+        <option value="vistava">vistava</option>
+      </select>
+    </label>
 
-      <label>
-        Дата
-        <input id="date" type="date">
-      </label>
+    <label>
+      Дата
+      <input type="date" id="eventDate">
+    </label>
 
-      <label>
-        Час
-        <input id="time" type="time">
-      </label>
+    <label>
+      Час
+      <input type="time" id="eventTime">
+    </label>
 
-      <label>
-        Seance ID
-        <input id="seanceId" disabled>
-      </label>
+    <label>
+      Seance ID
+      <input type="text" id="seanceId" disabled>
+    </label>
 
-      <span class="badge" id="status">чернетка</span>
-    </div>
+    <span id="statusBadge" class="badge">чернетка</span>
   </div>
 
-  <!-- 2. Цены и правила -->
-  <div class="card">
-    <h3>2️⃣ Ціни, кольори, правила</h3>
-
-    <!-- встраиваем ЭТАЛОННЫЙ редактор -->
-    <iframe src="../../seance-editor.html?embed=1"></iframe>
-  </div>
-
-  <!-- 3. Сохранение -->
-  <div class="card">
-    <h3>3️⃣ Збереження</h3>
-
-    <div class="actions">
-      <button class="btn btn-primary" onclick="save()">💾 Зберегти</button>
-      <button class="btn btn-ghost" onclick="cancel()">Скасувати</button>
-    </div>
+  <div class="row" style="margin-top:10px">
+    <label>
+      Статус
+      <select id="seanceStatus">
+        <option value="draft">Чернетка</option>
+        <option value="ready">Готовий</option>
+      </select>
+    </label>
   </div>
 </div>
 
+<!-- 2. Правила залу -->
+<div class="card">
+  <h3>2️⃣ Ціни та правила залу</h3>
+
+  <div class="row">
+    <label>
+      Сектор
+      <select id="ruleSector">
+        <option value="parter">Партер</option>
+        <option value="amfi">Амфітеатр</option>
+        <option value="balcon">Балкон</option>
+      </select>
+    </label>
+
+    <label>
+      Ряд від
+      <input type="number" id="rowFrom" min="1">
+    </label>
+
+    <label>
+      Ряд до
+      <input type="number" id="rowTo" min="1">
+    </label>
+
+    <label>
+      Ціна
+      <input type="number" id="price">
+    </label>
+
+    <button class="btn btn-primary" onclick="addRule()">Додати правило</button>
+  </div>
+
+  <div class="rule-list" id="rules"></div>
+</div>
+
+<!-- 3. Збереження -->
+<div class="card">
+  <h3>3️⃣ Збереження</h3>
+
+  <button class="btn btn-primary" onclick="saveSeance()">💾 Зберегти (локально)</button>
+
+  <pre id="output"></pre>
+</div>
+
+</main>
+
 <script>
-/* подключаем шапку */
-fetch("../index.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("admin-header").innerHTML = html;
-  });
-
-/* параметры */
-const params = new URLSearchParams(location.search);
-const existingId = params.get("seance");
-
-/* автогенерация id */
-function buildId(){
-  const d = date.value;
-  const t = time.value;
-  if(!d || !t) return "";
-
-  const hhmm = t.replace(":","-");
-  return `${title.value || "event"}-${d}-${hhmm}`;
-}
-
-date.onchange = time.onchange = title.oninput = () => {
-  seanceId.value = buildId();
+/* ========= STATE ========= */
+const seance = {
+  event:"",
+  date:"",
+  time:"",
+  seance_id:"",
+  status:"draft",
+  pricing:[]
 };
 
-/* загрузка существующего */
-if(existingId){
-  fetch(`../../data/seances/${existingId}.json`)
-    .then(r=>r.json())
-    .then(data=>{
-      title.value = data.title || "";
-      status.textContent = "редагування";
-      seanceId.value = existingId;
-    });
+/* ========= HELPERS ========= */
+function updateSeanceId(){
+  if(!seance.event || !seance.date || !seance.time) return;
+  const t = seance.time.replace(":","-");
+  seance.seance_id = `${seance.event}-${seance.date}-${t}`;
+  document.getElementById("seanceId").value = seance.seance_id;
 }
 
-/* сохранение */
-function save(){
-  const id = seanceId.value;
-  if(!id){
-    alert("Невірні дані сеансу");
-    return;
-  }
+function updateStatusUI(){
+  const badge = document.getElementById("statusBadge");
+  badge.textContent = seance.status === "ready" ? "готовий" : "чернетка";
+  badge.classList.toggle("ready", seance.status === "ready");
+}
 
-  const data = {
-    title: title.value,
-    datetime: `${date.value} ${time.value}`,
-    pricing: {} // фактически редактируется через iframe
+/* ========= RULES ========= */
+function addRule(){
+  const rule = {
+    sector: ruleSector.value,
+    from: +rowFrom.value,
+    to: +rowTo.value,
+    price: +price.value
   };
-
-  console.log("SAVE seance:", id, data);
-  alert("JSON сформовано. Далі — commit або sync (пізніше).");
+  seance.pricing.push(rule);
+  renderRules();
 }
 
-function cancel(){
-  history.back();
+function renderRules(){
+  rules.innerHTML = "";
+  seance.pricing.forEach(r=>{
+    const d = document.createElement("div");
+    d.className="rule";
+    d.textContent = `${r.sector}: ряди ${r.from}-${r.to}, ${r.price} грн`;
+    rules.appendChild(d);
+  });
 }
+
+/* ========= SAVE ========= */
+function saveSeance(){
+  const json = JSON.stringify(seance,null,2);
+  output.textContent = json;
+  console.log("SEANCE:", seance);
+  alert("Сеанс підготовлено (наступний крок — збереження у файл)");
+}
+
+/* ========= EVENTS ========= */
+eventSlug.onchange = e=>{seance.event=e.target.value;updateSeanceId();}
+eventDate.onchange = e=>{seance.date=e.target.value;updateSeanceId();}
+eventTime.onchange = e=>{seance.time=e.target.value;updateSeanceId();}
+seanceStatus.onchange = e=>{seance.status=e.target.value;updateStatusUI();}
+
+/* ========= HEADER ========= */
+fetch("../index.html")
+  .then(r=>r.text())
+  .then(html=>admin-header.innerHTML=html);
+
+updateStatusUI();
 </script>
 
 </body>
