@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Створення сеансу</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../../styles.css">
+
+  <style>
+    body{
+      margin:0;
+      background:#f1f5f9;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      color:#0f172a;
+    }
+
+    .page{
+      max-width:1200px;
+      margin:auto;
+      padding:24px;
+    }
+
+    h1{margin:0 0 16px}
+
+    .card{
+      background:#fff;
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:16px;
+      box-shadow:0 4px 14px rgba(0,0,0,.06);
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:end;
+    }
+
+    label{
+      font-size:13px;
+      color:#475569;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    input,select{
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #cbd5f5;
+      font-size:14px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      padding:10px 16px;
+      border-radius:12px;
+      border:none;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .btn-primary{background:#111827;color:#fff}
+    .btn-ghost{background:#e2e8f0}
+
+    iframe{
+      width:100%;
+      height:520px;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      background:#f8fafc;
+    }
+
+    .badge{
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      background:#e5e7eb;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- шапка админа -->
+<div id="admin-header"></div>
+
+<div class="page">
+  <h1>🛠 Створення / редагування сеансу</h1>
+
+  <!-- 1. Данные сеанса -->
+  <div class="card">
+    <h3>1️⃣ Дані сеансу</h3>
+
+    <div class="row">
+      <label>
+        Назва події
+        <input id="title" placeholder="Концерт / Вистава">
+      </label>
+
+      <label>
+        Дата
+        <input id="date" type="date">
+      </label>
+
+      <label>
+        Час
+        <input id="time" type="time">
+      </label>
+
+      <label>
+        Seance ID
+        <input id="seanceId" disabled>
+      </label>
+
+      <span class="badge" id="status">чернетка</span>
+    </div>
+  </div>
+
+  <!-- 2. Цены и правила -->
+  <div class="card">
+    <h3>2️⃣ Ціни, кольори, правила</h3>
+
+    <!-- встраиваем ЭТАЛОННЫЙ редактор -->
+    <iframe src="../../seance-editor.html?embed=1"></iframe>
+  </div>
+
+  <!-- 3. Сохранение -->
+  <div class="card">
+    <h3>3️⃣ Збереження</h3>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="save()">💾 Зберегти</button>
+      <button class="btn btn-ghost" onclick="cancel()">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* подключаем шапку */
+fetch("../index.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("admin-header").innerHTML = html;
+  });
+
+/* параметры */
+const params = new URLSearchParams(location.search);
+const existingId = params.get("seance");
+
+/* автогенерация id */
+function buildId(){
+  const d = date.value;
+  const t = time.value;
+  if(!d || !t) return "";
+
+  const hhmm = t.replace(":","-");
+  return `${title.value || "event"}-${d}-${hhmm}`;
+}
+
+date.onchange = time.onchange = title.oninput = () => {
+  seanceId.value = buildId();
+};
+
+/* загрузка существующего */
+if(existingId){
+  fetch(`../../data/seances/${existingId}.json`)
+    .then(r=>r.json())
+    .then(data=>{
+      title.value = data.title || "";
+      status.textContent = "редагування";
+      seanceId.value = existingId;
+    });
+}
+
+/* сохранение */
+function save(){
+  const id = seanceId.value;
+  if(!id){
+    alert("Невірні дані сеансу");
+    return;
+  }
+
+  const data = {
+    title: title.value,
+    datetime: `${date.value} ${time.value}`,
+    pricing: {} // фактически редактируется через iframe
+  };
+
+  console.log("SAVE seance:", id, data);
+  alert("JSON сформовано. Далі — commit або sync (пізніше).");
+}
+
+function cancel(){
+  history.back();
+}
+</script>
+
+</body>
+</html>
