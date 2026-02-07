@@ -1,172 +1,169 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Події — робочі сеанси</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Події — робочі сеанси</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 
-  <style>
-    body {
-      margin: 0;
-      background: #f1f5f9;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #0f172a;
-    }
+<style>
+.page-wrap{
+  padding:20px;
+  max-width:1200px;
+  margin:auto;
+}
 
-    .page {
-      max-width: 1200px;
-      margin: auto;
-      padding: 24px;
-    }
+h1{margin-bottom:16px}
 
-    h1 {
-      margin: 0 0 16px;
-    }
+.list{
+  display:grid;
+  gap:12px;
+}
 
-    .list {
-      display: grid;
-      gap: 14px;
-    }
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
 
-    .event {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: center;
-      box-shadow: 0 4px 14px rgba(0,0,0,.06);
-    }
+.meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
 
-    .event h3 {
-      margin: 0 0 6px;
-      font-size: 18px;
-    }
+.meta strong{font-size:16px}
+.meta span{font-size:13px;color:#6b7280}
 
-    .meta {
-      font-size: 14px;
-      color: #475569;
-    }
+.badge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:#e5e7eb;
+}
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+.badge.ready{background:#bbf7d0}
 
-    .btn {
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-    }
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
 
-    .btn-open {
-      background: #16a34a;
-      color: #fff;
-    }
+.btn{
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  font-weight:800;
+  cursor:pointer;
+}
 
-    .btn-edit {
-      background: #e2e8f0;
-      color: #0f172a;
-    }
-
-    .empty {
-      background: #fff;
-      padding: 20px;
-      border-radius: 14px;
-      text-align: center;
-      color: #64748b;
-    }
-  </style>
+.btn-primary{background:#111827;color:#fff}
+.btn-ghost{background:#f3f4f6}
+</style>
 </head>
 
 <body>
 
-<!-- общая шапка админа -->
 <div id="admin-header"></div>
 
-<div class="page">
-  <h1>🎭 Події — робочі сеанси</h1>
+<main class="page-wrap">
+  <h1>🎭 Події (робочі сеанси)</h1>
 
-  <div id="events" class="list">
-    <div class="empty">Завантаження…</div>
+  <div id="list" class="list">
+    <div class="card">
+      <span>Завантаження…</span>
+    </div>
   </div>
-</div>
+</main>
 
 <script>
-/* подключаем шапку */
-fetch("../index.html")
-  .then(r => r.text())
-  .then(html => document.getElementById("admin-header").innerHTML = html);
+/* =========================
+   LOAD SEANCES (OFFLINE)
+========================= */
+async function loadSeances(){
+  const container = document.getElementById("list");
+  container.innerHTML = "";
 
-/* загрузка активных сеансов */
-const eventsBox = document.getElementById("events");
+  try {
+    const res = await fetch("../../data/seances/");
+    const text = await res.text();
 
-fetch("../../data/seances/")
-  .then(() => {
-    // GitHub Pages не даёт листинг — работаем через список вручную
-    const seances = [
-      "koncert-2026-02-10-19-00.json"
-      // позже тут будет автогенерация
-    ];
+    // GitHub Pages directory listing hack
+    const matches = [...text.matchAll(/href="([^"]+\.json)"/g)];
+    const files = matches.map(m=>m[1]);
 
-    eventsBox.innerHTML = "";
-
-    seances.forEach(file => {
-      fetch(`../../data/seances/${file}`)
-        .then(r => r.json())
-        .then(data => {
-          const id = file.replace(".json","");
-          const title = data.title || id;
-          const date = data.datetime || "";
-
-          const el = document.createElement("div");
-          el.className = "event";
-
-          el.innerHTML = `
-            <div>
-              <h3>${title}</h3>
-              <div class="meta">${date}</div>
-              <div class="meta">ID: ${id}</div>
-            </div>
-
-            <div class="actions">
-              <button class="btn btn-open"
-                onclick="openCash('${id}')">
-                Відкрити касу
-              </button>
-
-              <button class="btn btn-edit"
-                onclick="editSeance('${id}')">
-                Редагувати
-              </button>
-            </div>
-          `;
-
-          eventsBox.appendChild(el);
-        });
-    });
-
-    if (!seances.length) {
-      eventsBox.innerHTML = `<div class="empty">Немає активних сеансів</div>`;
+    if (!files.length){
+      container.innerHTML = "<div class='card'>Немає збережених сеансів</div>";
+      return;
     }
+
+    for (const file of files){
+      const data = await fetch(`../../data/seances/${file}`).then(r=>r.json());
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerHTML = `
+        <strong>${data.seance_id}</strong>
+        <span>Статус: ${data.status}</span>
+      `;
+
+      const badge = document.createElement("span");
+      badge.className = "badge " + (data.status==="ready"?"ready":"");
+      badge.textContent = data.status==="ready" ? "готовий" : "чернетка";
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const sellBtn = document.createElement("button");
+      sellBtn.className = "btn btn-primary";
+      sellBtn.textContent = "Продаж";
+      sellBtn.onclick = ()=>{
+        window.location.href = `../../cashier/sales/index.html?seance=${data.seance_id}`;
+      };
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-ghost";
+      editBtn.textContent = "Редагувати";
+      editBtn.onclick = ()=>{
+        window.location.href = `../create/index.html?seance=${data.seance_id}`;
+      };
+
+      actions.appendChild(sellBtn);
+      actions.appendChild(editBtn);
+
+      card.appendChild(meta);
+      card.appendChild(badge);
+      card.appendChild(actions);
+
+      container.appendChild(card);
+    }
+
+  } catch(e){
+    container.innerHTML = "<div class='card'>Помилка завантаження сеансів</div>";
+    console.error(e);
+  }
+}
+
+/* =========================
+   HEADER
+========================= */
+fetch("../index.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("admin-header").innerHTML = html;
   });
 
-function openCash(id) {
-  // админ входит в ТУ ЖЕ кассу, что и кассир
-  window.location.href =
-    "../../cashier/sales/index.html?seance=" + id;
-}
-
-function editSeance(id) {
-  window.location.href =
-    "../create/index.html?seance=" + id;
-}
+loadSeances();
 </script>
 
 </body>
