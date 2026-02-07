@@ -5,8 +5,6 @@
 <title>Створення / редагування сеансу</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"> 
 
-
-
 <style>
 .page-wrap{padding:20px;max-width:1200px;margin:auto}
 .card{
@@ -32,14 +30,15 @@ h3{margin:0 0 10px}
 }
 .badge.ready{background:#bbf7d0}
 .section-actions{display:flex;gap:10px;flex-wrap:wrap}
-iframe{
-  width:100%;height:520px;border:1px solid #e5e7eb;
-  border-radius:12px;background:#f9fafb
-}
 pre{
   background:#0f172a;color:#e5e7eb;
   padding:12px;border-radius:12px;
   font-size:12px;overflow:auto
+}
+.note{
+  font-size:13px;
+  color:#475569;
+  margin-top:6px
 }
 </style>
 </head>
@@ -90,10 +89,13 @@ pre{
     </div>
   </div>
 
-  <!-- 2. PRICING -->
+  <!-- 2. PRICING (stub) -->
   <div class="card">
     <h3>2️⃣ Ціни та кольори</h3>
-    <iframe id="editorFrame" src="../../seance-editor.html?embed=1"></iframe>
+    <div class="note">
+      Редактор цін і кольорів буде підключено окремим модулем.
+      Зараз формується базовий JSON сеансу.
+    </div>
   </div>
 
   <!-- 3. SAVE -->
@@ -151,10 +153,8 @@ function render(){
 ===================== */
 async function loadSeance(){
   if(!EDIT_ID) return;
-
   try{
     const data = await fetch(`../../data/seances/${EDIT_ID}.json`).then(r=>r.json());
-
     Object.assign(seance,data);
 
     eventSlug.value = seance.event||"";
@@ -164,7 +164,6 @@ async function loadSeance(){
 
     updateStatusUI();
     render();
-
   }catch(e){
     alert("Не вдалося завантажити сеанс");
     console.error(e);
