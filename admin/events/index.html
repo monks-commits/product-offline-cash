@@ -2,39 +2,137 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Події — касовий режим (адмін)</title>
+<title>Події — продаж квитків</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  height:100%;
-  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
-  background:#f3f4f6;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0f172a;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
 }
 
-.page{
-  display:flex;
-  flex-direction:column;
-  height:100vh;
+/* layout */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
-/* TOP BAR */
-.topbar{
-  background:#ffffff;
-  border-bottom:1px solid #e5e7eb;
-  padding:12px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
+/* top bar */
+.topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.topbar h1{
-  font-size:18px;
-  margin:0;
-  font-weight:800;
+.topbar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
 }
 
-.topbar select{
-  padding:8px 12px
+.topbar select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  min-width: 320px;
+}
+
+/* hall */
+.hall-wrap {
+  flex: 1;
+  background: #f8fafc;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #f8fafc;
+}
+
+/* hint */
+.hint {
+  color: #6b7280;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <h1>🎟 Події</h1>
+
+    <select id="seanceSelect">
+      <option value="">Оберіть сеанс…</option>
+    </select>
+
+    <span class="hint">
+      Адмін працює в режимі каси
+    </span>
+  </div>
+
+  <!-- HALL -->
+  <div class="hall-wrap">
+    <iframe id="hallFrame" src=""></iframe>
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   ДАНІ СЕАНСІВ (офлайн)
+   ========================= */
+
+const SEANCES = [
+  {
+    id: "koncert-2026-02-10-19-00",
+    title: "Концерт — 10.02 • 19:00"
+  }
+];
+
+/* =========================
+   INIT
+   ========================= */
+
+const select = document.getElementById("seanceSelect");
+const frame  = document.getElementById("hallFrame");
+
+/* наповнюємо список */
+SEANCES.forEach(s => {
+  const o = document.createElement("option");
+  o.value = s.id;
+  o.textContent = s.title;
+  select.appendChild(o);
+});
+
+/* вибір сеансу */
+select.addEventListener("change", () => {
+  const seanceId = select.value;
+
+  if (!seanceId) {
+    frame.src = "";
+    return;
+  }
+
+  frame.src =
+    "../../hall/hall-cash.html" +
+    "?mode=cash" +
+    "&seance=" + encodeURIComponent(seanceId) +
+    "&embed=1";
+});
+</script>
+
+</body>
+</html>
