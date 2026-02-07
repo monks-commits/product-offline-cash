@@ -12,20 +12,63 @@
       height: 100%;
       margin: 0;
       background: #0f172a;
-      color: #fff;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
+    /* ===== ВЕРХНЯЯ ПАНЕЛЬ КАССЫ ===== */
+    .cash-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+
+      padding: 10px 14px;
+      background: #020617;
+      color: #fff;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .cash-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cash-topbar select {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: #fff;
+    }
+
+    .cash-topbar button {
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-change {
+      background: #111827;
+      color: #fff;
+    }
+
+    .btn-reports {
+      background: #1e293b;
+      color: #fff;
+    }
+
+    /* ===== ОСНОВНАЯ ОБЛАСТЬ ===== */
     .layout {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      height: 100vh;
-      overflow: hidden;
+      height: calc(100vh - 52px);
     }
 
     .hall-wrap {
       background: #f8fafc;
-      overflow: hidden;
+      width: 100%;
+      height: 100%;
     }
 
     iframe {
@@ -34,98 +77,58 @@
       border: none;
       background: #f8fafc;
     }
-
-    .side {
-      background: #020617;
-      display: flex;
-      flex-direction: column;
-      padding: 14px;
-      gap: 12px;
-    }
-
-    .side h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .summary {
-      background: #020617;
-      border-radius: 12px;
-      padding: 12px;
-      border: 1px solid #1e293b;
-    }
-
-    .summary div {
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    .amount {
-      font-size: 22px;
-      font-weight: 800;
-    }
-
-    .actions {
-      margin-top: auto;
-      display: grid;
-      gap: 10px;
-    }
-
-    .btn {
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .btn-sell {
-      background: #f87171;
-      color: #000;
-    }
-
-    .btn-print {
-      background: #86efac;
-      color: #000;
-    }
-
-    .btn-clear {
-      background: #1e293b;
-      color: #fff;
-    }
   </style>
 </head>
 
 <body>
 
-<div class="layout">
+<!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
+<div class="cash-topbar">
+  <div class="cash-topbar-left">
+    <label>
+      Сеанс:
+      <select id="seanceSelect"></select>
+    </label>
+    <button class="btn-change" id="changeSeanceBtn">Змінити</button>
+  </div>
 
-  <!-- ЗАЛ -->
+  <button class="btn-reports" id="reportsBtn">Звіти</button>
+</div>
+
+<!-- ===== ЗАЛ ===== -->
+<div class="layout">
   <div class="hall-wrap">
     <iframe src="../../hall/hall-cash.html?mode=cash"></iframe>
   </div>
-
-  <!-- ПРАВАЯ ПАНЕЛЬ КАССИРА -->
-  <div class="side">
-    <h2>🎟 Каса</h2>
-
-    <div class="summary">
-      <div>Обрані місця:</div>
-      <div id="selected">—</div>
-
-      <div style="margin-top:10px">Сума:</div>
-      <div class="amount" id="total">0 грн</div>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-sell">ПРОДАТИ</button>
-      <button class="btn btn-print">ДРУК</button>
-      <button class="btn btn-clear">ОЧИСТИТИ</button>
-    </div>
-  </div>
-
 </div>
+
+<script>
+  // ВРЕМЕННО: локальный список
+  const seances = [
+    { id: "koncert-2026-02-10-19-00", title: "Концерт — 10.02.2026 19:00" },
+    { id: "vistava-2026-02-11-18-00", title: "Вистава — 11.02.2026 18:00" }
+  ];
+
+  const select = document.getElementById("seanceSelect");
+
+  seances.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.title;
+    select.appendChild(opt);
+  });
+
+  document.getElementById("changeSeanceBtn").onclick = () => {
+    const id = select.value;
+    if (!id) return;
+    // дальше — твоя существующая логика загрузки сеанса в hall-cash
+    console.log("Змінити сеанс:", id);
+  };
+
+  document.getElementById("reportsBtn").onclick = () => {
+    window.open("../../reports/index.html", "_blank");
+  };
+</script>
 
 </body>
 </html>
