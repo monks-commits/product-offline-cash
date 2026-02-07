@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Каса — Продаж квитків</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../../styles.css">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0f172a;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .hall-wrap {
+      background: #f8fafc;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #f8fafc;
+    }
+
+    .side {
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 12px;
+    }
+
+    .side h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .summary {
+      background: #020617;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #1e293b;
+    }
+
+    .summary div {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .amount {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .actions {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-sell {
+      background: #f87171;
+      color: #000;
+    }
+
+    .btn-print {
+      background: #86efac;
+      color: #000;
+    }
+
+    .btn-clear {
+      background: #1e293b;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- ЗАЛ -->
+  <div class="hall-wrap">
+    <iframe src="../../hall/hall-cash.html?mode=cash"></iframe>
+  </div>
+
+  <!-- ПРАВАЯ ПАНЕЛЬ КАССИРА -->
+  <div class="side">
+    <h2>🎟 Каса</h2>
+
+    <div class="summary">
+      <div>Обрані місця:</div>
+      <div id="selected">—</div>
+
+      <div style="margin-top:10px">Сума:</div>
+      <div class="amount" id="total">0 грн</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-sell">ПРОДАТИ</button>
+      <button class="btn btn-print">ДРУК</button>
+      <button class="btn btn-clear">ОЧИСТИТИ</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
