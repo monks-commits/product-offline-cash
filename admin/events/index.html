@@ -2,99 +2,119 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Події — продаж квитків</title>
+<title>Події — офлайн каса</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #0f172a;
-  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    background:#f8fafc;
+  }
 
-/* layout */
-.page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+  header{
+    background:#111827;
+    color:#fff;
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
 
-/* top bar */
-.topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+  header h1{
+    font-size:18px;
+    margin:0;
+    font-weight:800;
+  }
 
-.topbar h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-}
+  main{
+    padding:16px;
+  }
 
-.topbar select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  min-width: 320px;
-}
+  .card{
+    background:#fff;
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 4px 14px rgba(0,0,0,.06);
+  }
 
-/* hall */
-.hall-wrap {
-  flex: 1;
-  background: #f8fafc;
-}
+  .row{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
 
-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #f8fafc;
-}
+  select{
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+    min-width:280px;
+    font-size:14px;
+  }
 
-/* hint */
-.hint {
-  color: #6b7280;
-  font-size: 13px;
-}
+  .badge{
+    padding:4px 10px;
+    border-radius:999px;
+    background:#e5e7eb;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  iframe{
+    width:100%;
+    height:calc(100vh - 220px);
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .hint{
+    font-size:13px;
+    color:#6b7280;
+    margin-top:8px;
+  }
 </style>
 </head>
 
 <body>
 
-<div class="page">
+<header>
+  <h1>🎟 Події (офлайн каса)</h1>
+</header>
 
-  <!-- HEADER -->
-  <div class="topbar">
-    <h1>🎟 Події</h1>
+<main>
 
-    <select id="seanceSelect">
-      <option value="">Оберіть сеанс…</option>
-    </select>
-
-    <span class="hint">
-      Адмін працює в режимі каси
-    </span>
+  <!-- ВЫБОР СЕАНСА -->
+  <div class="card">
+    <div class="row">
+      <select id="seanceSelect">
+        <option value="">Оберіть сеанс…</option>
+      </select>
+      <span class="badge">адмін працює в режимі каси</span>
+    </div>
+    <div class="hint">
+      Оберіть сеанс — нижче відкриється каса зі схемою залу, кошиком та кнопками продажу.
+    </div>
   </div>
 
-  <!-- HALL -->
-  <div class="hall-wrap">
-    <iframe id="hallFrame" src=""></iframe>
+  <!-- КАССА -->
+  <div class="card">
+    <iframe
+      id="cashFrame"
+      src=""
+      title="Каса"
+    ></iframe>
   </div>
 
-</div>
+</main>
 
 <script>
 /* =========================
-   ДАНІ СЕАНСІВ (офлайн)
-   ========================= */
-
+   СПИСОК СЕАНСОВ (OFFLINE)
+   потом можно читать из data/seances
+========================= */
 const SEANCES = [
   {
     id: "koncert-2026-02-10-19-00",
@@ -103,34 +123,35 @@ const SEANCES = [
 ];
 
 /* =========================
-   INIT
-   ========================= */
-
+   DOM
+========================= */
 const select = document.getElementById("seanceSelect");
-const frame  = document.getElementById("hallFrame");
+const frame  = document.getElementById("cashFrame");
 
-/* наповнюємо список */
-SEANCES.forEach(s => {
+/* =========================
+   FILL SELECT
+========================= */
+SEANCES.forEach(s=>{
   const o = document.createElement("option");
   o.value = s.id;
   o.textContent = s.title;
   select.appendChild(o);
 });
 
-/* вибір сеансу */
-select.addEventListener("change", () => {
+/* =========================
+   ON SELECT
+========================= */
+select.addEventListener("change", ()=>{
   const seanceId = select.value;
 
-  if (!seanceId) {
+  if(!seanceId){
     frame.src = "";
     return;
   }
 
+  /* 🔥 ВАЖНО: именно hall-cash.html */
   frame.src =
-    "../../hall/hall-cash.html" +
-    "?mode=cash" +
-    "&seance=" + encodeURIComponent(seanceId) +
-    "&embed=1";
+    `../../hall-cash.html?seance=${encodeURIComponent(seanceId)}&mode=cash&embed=1`;
 });
 </script>
 
