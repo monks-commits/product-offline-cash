@@ -127,13 +127,11 @@ seanceSelect.addEventListener("change", () => {
   const seanceId = seanceSelect.value;
   if (!seanceId) return;
 
-  // передаём seance_id в hall-cash
-  hallFrame.contentWindow.postMessage({
-    type: "SET_SEANCE",
-    seance_id: seanceId,
-    source: "offline-cash"
-  }, "*");
+  hallFrame.src =
+    "../../hall/hall-cash.html?mode=cash&seance=" +
+    encodeURIComponent(seanceId);
 });
+
 
 // отчёты
 function openReports() {
