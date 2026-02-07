@@ -9,38 +9,44 @@
 
 <style>
 .page-wrap{padding:20px;max-width:1200px;margin:auto}
-.card{
-  background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;
-  box-shadow:0 4px 14px rgba(0,0,0,.06);
-}
-h1{margin-bottom:12px}
-.list{display:flex;flex-direction:column;gap:10px}
+h1{margin-bottom:14px}
+
+.list{display:grid;gap:12px}
 .item{
-  display:grid;
-  grid-template-columns:1fr auto auto;
-  gap:12px;
+  background:#fff;
+  border-radius:14px;
+  padding:14px 16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+  display:flex;
   align-items:center;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #e5e7eb;
+  justify-content:space-between;
+  gap:14px;
 }
-.meta{
-  font-size:14px;
-}
-.meta b{font-size:15px}
-.badge{
-  padding:4px 10px;border-radius:999px;
-  font-size:12px;background:#bbf7d0;
-}
-.actions{display:flex;gap:8px}
+.meta{font-size:14px;color:#374151}
+.meta b{font-size:16px;color:#111827}
+
+.actions{display:flex;gap:10px}
 .btn{
-  padding:8px 14px;border-radius:10px;
-  border:none;font-weight:800;cursor:pointer;
+  padding:8px 14px;
+  border-radius:10px;
+  border:none;
+  font-weight:800;
+  cursor:pointer;
 }
-.btn-sell{background:#111827;color:#fff}
-.btn-edit{background:#f3f4f6}
+.btn-primary{background:#111827;color:#fff}
+.btn-ghost{background:#f3f4f6}
+.badge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:#bbf7d0;
+  color:#14532d;
+  font-weight:700;
+}
 .empty{
-  opacity:.6;font-size:14px;padding:20px;
+  padding:30px;
+  text-align:center;
+  opacity:.6;
 }
 </style>
 </head>
@@ -50,95 +56,97 @@ h1{margin-bottom:12px}
 <div id="admin-header"></div>
 
 <main class="page-wrap">
-  <h1>🎭 Події (готові до продажу)</h1>
+  <h1>🎭 Активні події (готові до продажу)</h1>
 
   <div id="list" class="list"></div>
 </main>
 
 <script>
-/* =====================
-   LOAD SEANCES
-===================== */
-async function loadSeances(){
-  const res = await fetch("../../data/seances/index.json").catch(()=>null);
+/* =========================
+   CONFIG
+========================= */
 
-  if(!res){
-    list.innerHTML = "<div class='empty'>Немає індексу seances</div>";
-    return;
-  }
+// ❗ ЯВНО перечисляем файлы (офлайн-реальность)
+const SEANCES = [
+  "../data/seances/koncert-2026-02-10-19-00.json"
+];
 
-  const files = await res.json(); // ["id.json", ...]
-  const seances = [];
+/* =========================
+   LOAD
+========================= */
+const list = document.getElementById("list");
 
-  for(const file of files){
+async function loadEvents(){
+  const ready = [];
+
+  for (const url of SEANCES){
     try{
-      const data = await fetch(`../../data/seances/${file}`).then(r=>r.json());
-      if(data.status==="ready"){
-        seances.push(data);
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.status === "ready"){
+        ready.push(data);
       }
-    }catch{}
+    }catch(e){
+      console.warn("Не вдалося завантажити", url);
+    }
   }
 
-  render(seances);
+  render(ready);
 }
 
-/* =====================
-   RENDER
-===================== */
-function render(seances){
-  if(!seances.length){
-    list.innerHTML = "<div class='empty'>Немає готових сеансів</div>";
+function render(items){
+  if (!items.length){
+    list.innerHTML = `<div class="empty">Немає готових сеансів</div>`;
     return;
   }
 
-  seances.sort((a,b)=>{
-    const da = `${a.date} ${a.time}`;
-    const db = `${b.date} ${b.time}`;
-    return da.localeCompare(db);
-  });
-
-  list.innerHTML = "";
-
-  seances.forEach(s=>{
-    const div = document.createElement("div");
-    div.className = "item";
-
-    div.innerHTML = `
+  list.innerHTML = items.map(s=>`
+    <div class="item">
       <div class="meta">
-        <b>${s.event || s.seance_id}</b><br>
-        ${s.date} ${s.time}
+        <b>${s.event || "Подія"}</b><br>
+        ${s.date} • ${s.time}<br>
+        <small>${s.seance_id}</small>
       </div>
 
-      <span class="badge">готовий</span>
+      <span class="badge">READY</span>
 
       <div class="actions">
-        <button class="btn btn-sell" onclick="goSell('${s.seance_id}')">Продажі</button>
-        <button class="btn btn-edit" onclick="goEdit('${s.seance_id}')">Редагувати</button>
+        <button class="btn btn-primary"
+          onclick="openSales('${s.seance_id}')">
+          Продажі
+        </button>
+
+        <button class="btn btn-ghost"
+          onclick="editSeance('${s.seance_id}')">
+          Редагувати
+        </button>
       </div>
-    `;
-
-    list.appendChild(div);
-  });
+    </div>
+  `).join("");
 }
 
-/* =====================
-   NAV
-===================== */
-function goSell(id){
-  location.href = `../sales/index.html?seance=${id}`;
-}
-function goEdit(id){
-  location.href = `../create/index.html?seance=${id}`;
+/* =========================
+   ACTIONS
+========================= */
+function openSales(id){
+  location.href = `../sales/?seance=${id}`;
 }
 
-/* =====================
+function editSeance(id){
+  location.href = `../create/?edit=${id}`;
+}
+
+/* =========================
    HEADER
-===================== */
+========================= */
 fetch("../index.html")
   .then(r=>r.text())
-  .then(html=>admin-header.innerHTML=html);
+  .then(html=>{
+    document.getElementById("admin-header").innerHTML = html;
+  });
 
-loadSeances();
+loadEvents();
 </script>
 
 </body>
