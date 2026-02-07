@@ -5,43 +5,28 @@
 <title>Події — білетний відділ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
-
 <style>
-.page-wrap{
-  padding:20px;
-  max-width:100%;
-}
+.page-wrap{padding:20px;max-width:100%}
 .card{
-  background:#fff;
-  border-radius:14px;
-  padding:16px;
-  margin-bottom:16px;
+  background:#fff;border-radius:14px;
+  padding:16px;margin-bottom:16px;
   box-shadow:0 4px 14px rgba(0,0,0,.06);
 }
-.row{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  align-items:center;
-}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 h1{margin-bottom:10px}
 h3{margin:0 0 10px}
-
 select{
   padding:8px 10px;
   border-radius:8px;
   border:1px solid #d1d5db;
   min-width:260px;
 }
-
 .badge{
   padding:4px 10px;
   border-radius:999px;
   font-size:12px;
   background:#e5e7eb;
 }
-
 iframe{
   width:100%;
   height:80vh;
@@ -49,11 +34,7 @@ iframe{
   border-radius:14px;
   background:#f9fafb;
 }
-
-.hint{
-  font-size:13px;
-  color:#6b7280;
-}
+.hint{font-size:13px;color:#6b7280}
 </style>
 </head>
 
@@ -73,13 +54,11 @@ iframe{
       <select id="seanceSelect">
         <option value="">Вибери сеанс…</option>
       </select>
-
       <span class="badge">робочий режим</span>
     </div>
 
     <p class="hint">
-      Тут відображаються активні сеанси.  
-      Продажі та бронювання виконуються нижче.
+      Показуються лише <b>готові до продажу</b> сеанси (status = ready).
     </p>
   </div>
 
@@ -87,53 +66,49 @@ iframe{
   <div class="card">
     <h3>2️⃣ Продаж квитків</h3>
 
-    <iframe
-      id="hallFrame"
-      src=""
-      title="Схема залу"
-    ></iframe>
+    <iframe id="hallFrame" src="" title="Схема залу"></iframe>
 
     <p class="hint" style="margin-top:10px">
       Схема залу відкривається у режимі <b>embed</b>.  
-      Продажі, бронювання та друк виконуються безпосередньо тут.
+      Продажі, бронювання та друк виконуються тут.
     </p>
   </div>
 
 </main>
 
 <script>
-/* === HEADER === */
+/* ===== HEADER ===== */
 fetch("../index.html")
-  .then(r => r.text())
-  .then(html => {
+  .then(r=>r.text())
+  .then(html=>{
     document.getElementById("admin-header").innerHTML = html;
   });
-
-/* === MOCK DATA (LAB ONLY) ===
-   В продуктах будет Supabase / API */
-const seances = [
-  {
-    id: "koncert-2026-02-10-19-00",
-    title: "Концерт • 10.02 • 19:00"
-  },
-  {
-    id: "vistava-2026-02-11-18-00",
-    title: "Вистава • 11.02 • 18:00"
-  }
-];
 
 const select = document.getElementById("seanceSelect");
 const frame  = document.getElementById("hallFrame");
 
-/* populate select */
-seances.forEach(s=>{
-  const o = document.createElement("option");
-  o.value = s.id;
-  o.textContent = s.title;
-  select.appendChild(o);
-});
+/* ===== LOAD READY SEANCES ===== */
+async function loadSeances(){
+  try{
+    const res = await fetch("../../data/seances/index.json");
+    const list = await res.json();
 
-/* on select */
+    list
+      .filter(s => s.status === "ready")
+      .forEach(s=>{
+        const o = document.createElement("option");
+        o.value = s.seance_id;
+        o.textContent = `${s.event} • ${s.date} • ${s.time}`;
+        select.appendChild(o);
+      });
+
+  }catch(e){
+    console.error(e);
+    alert("Не вдалося завантажити список сеансів");
+  }
+}
+
+/* ===== ON SELECT ===== */
 select.addEventListener("change", ()=>{
   const seanceId = select.value;
   if(!seanceId){
@@ -141,11 +116,11 @@ select.addEventListener("change", ()=>{
     return;
   }
 
-  /* ВАЖНО:
-     hall.html / hall-cash.html будут подменяться
-     в продуктовых репо */
-  frame.src = `../../hall.html?seance=${encodeURIComponent(seanceId)}&embed=1`;
+  frame.src =
+    `../../hall/hall-cash.html?embed=1&seance=${encodeURIComponent(seanceId)}`;
 });
+
+loadSeances();
 </script>
 
 </body>
