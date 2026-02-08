@@ -90,12 +90,13 @@
       if(!payload || !Array.isArray(payload.items)) return;
 
       payload.items.forEach(it=>{
-        if(!it.qr_payload){
-          area.innerHTML += `<div class="ticket">
-            <div class="row">QR не згенеровано</div>
-          </div>`;
-          return;
-        }
+        // офлайн-каса: если QR нет — генерируем
+if(!it.qr_payload){
+  it.qr_payload =
+    "order:CASH-" +
+    Date.now().toString(36) + "-" +
+    Math.random().toString(36).slice(2,8);
+}
 
         const t = document.createElement('div');
         t.className = 'ticket';
