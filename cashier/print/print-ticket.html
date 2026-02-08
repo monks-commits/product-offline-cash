@@ -2,115 +2,154 @@
 <html lang="uk">
 <head>
   <meta charset="utf-8" />
-  <title>Квиток (офлайн)</title>
+  <title>Квиток</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- QR библиотека -->
+  <!-- QR -->
   <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <style>
     body {
       margin: 0;
+      background: #f1f5f9;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: #f8fafc;
     }
 
+    /* Размер ориентирован на 80мм термобумагу */
     .ticket {
-      max-width: 420px;
+      width: 320px;
       margin: 20px auto;
       background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.12);
+      padding: 14px 14px 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      border-radius: 10px;
     }
 
-    .title {
+    .theatre {
+      text-align: center;
+      font-weight: 900;
       font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    .meta {
-      font-size: 14px;
+    .event {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
       margin-bottom: 10px;
     }
 
-    .meta div {
+    .line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
       margin: 2px 0;
+    }
+
+    .line b {
+      font-weight: 700;
+    }
+
+    .sep {
+      border-top: 1px dashed #cbd5e1;
+      margin: 8px 0 10px;
     }
 
     .qr-wrap {
       display: flex;
       justify-content: center;
-      margin-top: 14px;
-      margin-bottom: 10px;
+      margin: 10px 0 6px;
     }
 
     .qr {
-      width: 240px;
-      height: 240px;
+      width: 220px;
+      height: 220px;
     }
 
-    .payload {
-      font-size: 11px;
-      color: #555;
-      word-break: break-all;
-      margin-top: 8px;
+    .order {
       text-align: center;
+      font-size: 11px;
+      color: #475569;
+      margin-top: 6px;
+      word-break: break-all;
+    }
+
+    .foot {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
 
-  <div class="ticket">
-    <div class="title" id="tTitle">—</div>
+<div class="ticket">
+  <div class="theatre" id="tTheatre">Театр</div>
+  <div class="event" id="tEvent">Подія</div>
 
-    <div class="meta">
-      <div><b>Дата:</b> <span id="tDate">—</span></div>
-      <div><b>Час:</b> <span id="tTime">—</span></div>
-      <div><b>Місце:</b> <span id="tSeat">—</span></div>
-      <div><b>Ціна:</b> <span id="tPrice">—</span> грн</div>
-    </div>
+  <div class="line"><span>Дата</span><b id="tDate">—</b></div>
+  <div class="line"><span>Час</span><b id="tTime">—</b></div>
+  <div class="line"><span>Зона</span><b id="tZone">—</b></div>
+  <div class="line"><span>Ряд</span><b id="tRow">—</b></div>
+  <div class="line"><span>Місце</span><b id="tSeat">—</b></div>
+  <div class="line"><span>Ціна</span><b><span id="tPrice">—</span> грн</b></div>
 
-    <div class="qr-wrap">
-      <div id="qr" class="qr"></div>
-    </div>
+  <div class="sep"></div>
 
-    <div class="payload" id="payloadText"></div>
+  <div class="qr-wrap">
+    <div id="qr" class="qr"></div>
   </div>
+
+  <div class="order" id="tOrder">—</div>
+
+  <div class="foot">
+    Офлайн каса • Vash Admin
+  </div>
+</div>
 
 <script>
   const p = new URLSearchParams(location.search);
 
   const data = {
-    title:  p.get("title")  || "Квиток",
-    date:   p.get("date")   || "",
-    time:   p.get("time")   || "",
-    seat:   p.get("seat")   || "",
-    price:  p.get("price")  || "",
-    order:  p.get("order")  || ("CASH-" + Date.now())
+    theatre: p.get("theatre") || "Театр ім. Шевченка",
+    event:   p.get("event")   || "Подія",
+    date:    p.get("date")    || "",
+    time:    p.get("time")    || "",
+    zone:    p.get("zone")    || "",
+    row:     p.get("row")     || "",
+    seat:    p.get("seat")    || "",
+    price:   p.get("price")   || "",
+    order:   p.get("order")   || ("CASH-" + Date.now())
   };
 
-  // Заполняем текст
-  document.getElementById("tTitle").textContent = data.title;
-  document.getElementById("tDate").textContent  = data.date;
-  document.getElementById("tTime").textContent  = data.time;
-  document.getElementById("tSeat").textContent  = data.seat;
-  document.getElementById("tPrice").textContent = data.price;
+  // Текст
+  tTheatre.textContent = data.theatre;
+  tEvent.textContent   = data.event;
+  tDate.textContent    = data.date;
+  tTime.textContent    = data.time;
+  tZone.textContent    = data.zone;
+  tRow.textContent     = data.row;
+  tSeat.textContent    = data.seat;
+  tPrice.textContent   = data.price;
+  tOrder.textContent   = data.order;
 
-  // QR payload — КЛЮЧЕВО
-  const qrPayload =
-    "order:" + data.order +
-    "|seat:" + data.seat +
-    "|date:" + data.date +
-    "|time:" + data.time;
-
-  document.getElementById("payloadText").textContent = qrPayload;
+  // QR payload (важно: простой и стабильный)
+  const qrPayload = [
+    "order:" + data.order,
+    "event:" + data.event,
+    "date:" + data.date,
+    "time:" + data.time,
+    "zone:" + data.zone,
+    "row:" + data.row,
+    "seat:" + data.seat,
+    "price:" + data.price
+  ].join("|");
 
   new QRCode(document.getElementById("qr"), {
     text: qrPayload,
-    width: 240,
-    height: 240,
+    width: 220,
+    height: 220,
     correctLevel: QRCode.CorrectLevel.M
   });
 </script>
