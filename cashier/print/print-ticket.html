@@ -5,153 +5,169 @@
   <title>Квиток</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- QR -->
-  <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <!-- QR генератор (без сборки, работает в браузере) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <style>
     body {
       margin: 0;
-      background: #f1f5f9;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      padding: 0;
+      background: #eef2f7;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* Размер ориентирован на 80мм термобумагу */
     .ticket {
       width: 320px;
       margin: 20px auto;
       background: #fff;
-      padding: 14px 14px 16px;
+      border-radius: 14px;
+      padding: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.15);
-      border-radius: 10px;
     }
 
-    .theatre {
+    .title {
       text-align: center;
-      font-weight: 900;
-      font-size: 18px;
+      font-weight: 800;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
       margin-bottom: 4px;
     }
 
-    .event {
-      text-align: center;
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .line {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      margin: 2px 0;
-    }
-
-    .line b {
+    .row b {
       font-weight: 700;
     }
 
     .sep {
       border-top: 1px dashed #cbd5e1;
-      margin: 8px 0 10px;
+      margin: 10px 0;
     }
 
     .qr-wrap {
       display: flex;
       justify-content: center;
-      margin: 10px 0 6px;
+      margin: 12px 0;
     }
 
-    .qr {
-      width: 220px;
-      height: 220px;
+    #qr {
+      width: 200px;
+      height: 200px;
     }
 
-    .order {
+    .payload {
+      font-size: 10px;
+      color: #64748b;
+      word-break: break-all;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .footer {
       text-align: center;
       font-size: 11px;
       color: #475569;
-      margin-top: 6px;
-      word-break: break-all;
+      margin-top: 8px;
     }
 
-    .foot {
-      text-align: center;
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 6px;
+    @media print {
+      body {
+        background: #fff;
+      }
+      .ticket {
+        box-shadow: none;
+        margin: 0;
+      }
     }
   </style>
 </head>
 <body>
 
 <div class="ticket">
-  <div class="theatre" id="tTheatre">Театр</div>
-  <div class="event" id="tEvent">Подія</div>
+  <div class="title">Театр ім. Шевченка</div>
+  <div class="subtitle" id="event">Подія</div>
 
-  <div class="line"><span>Дата</span><b id="tDate">—</b></div>
-  <div class="line"><span>Час</span><b id="tTime">—</b></div>
-  <div class="line"><span>Зона</span><b id="tZone">—</b></div>
-  <div class="line"><span>Ряд</span><b id="tRow">—</b></div>
-  <div class="line"><span>Місце</span><b id="tSeat">—</b></div>
-  <div class="line"><span>Ціна</span><b><span id="tPrice">—</span> грн</b></div>
+  <div class="row"><span>Дата</span><b id="date">—</b></div>
+  <div class="row"><span>Час</span><b id="time">—</b></div>
+  <div class="row"><span>Зона</span><b id="zone">—</b></div>
+  <div class="row"><span>Ряд</span><b id="row">—</b></div>
+  <div class="row"><span>Місце</span><b id="seat">—</b></div>
+  <div class="row"><span>Ціна</span><b><span id="price">0</span> грн</b></div>
 
   <div class="sep"></div>
 
   <div class="qr-wrap">
-    <div id="qr" class="qr"></div>
+    <div id="qr"></div>
   </div>
 
-  <div class="order" id="tOrder">—</div>
+  <div class="payload" id="payloadText"></div>
 
-  <div class="foot">
-    Офлайн каса • Vash Admin
+  <div class="footer">
+    Офлайн-каса • Vash Admin<br/>
+    <span id="orderId"></span>
   </div>
 </div>
 
 <script>
-  const p = new URLSearchParams(location.search);
+  // --- helpers ---
+  const qs = new URLSearchParams(location.search);
+  const get = (k, d="") => qs.get(k) || d;
 
+  // --- data ---
   const data = {
-    theatre: p.get("theatre") || "Театр ім. Шевченка",
-    event:   p.get("event")   || "Подія",
-    date:    p.get("date")    || "",
-    time:    p.get("time")    || "",
-    zone:    p.get("zone")    || "",
-    row:     p.get("row")     || "",
-    seat:    p.get("seat")    || "",
-    price:   p.get("price")   || "",
-    order:   p.get("order")   || ("CASH-" + Date.now())
+    event: get("event", "Подія"),
+    date:  get("date",  "—"),
+    time:  get("time",  "—"),
+    zone:  get("zone",  "—"),
+    row:   get("row",   "—"),
+    seat:  get("seat",  "—"),
+    price: get("price", "0"),
+    order: get("order", "CASH-" + Date.now())
   };
 
-  // Текст
-  tTheatre.textContent = data.theatre;
-  tEvent.textContent   = data.event;
-  tDate.textContent    = data.date;
-  tTime.textContent    = data.time;
-  tZone.textContent    = data.zone;
-  tRow.textContent     = data.row;
-  tSeat.textContent    = data.seat;
-  tPrice.textContent   = data.price;
-  tOrder.textContent   = data.order;
+  // --- fill text ---
+  document.getElementById("event").textContent = data.event;
+  document.getElementById("date").textContent  = data.date;
+  document.getElementById("time").textContent  = data.time;
+  document.getElementById("zone").textContent  = data.zone;
+  document.getElementById("row").textContent   = data.row;
+  document.getElementById("seat").textContent  = data.seat;
+  document.getElementById("price").textContent = data.price;
+  document.getElementById("orderId").textContent = data.order;
 
-  // QR payload (важно: простой и стабильный)
-  const qrPayload = [
-    "order:" + data.order,
-    "event:" + data.event,
-    "date:" + data.date,
-    "time:" + data.time,
-    "zone:" + data.zone,
-    "row:" + data.row,
-    "seat:" + data.seat,
-    "price:" + data.price
-  ].join("|");
+  // --- QR payload (ЭТО ВАЖНО) ---
+  const qrPayload =
+    `order:${data.order}` +
+    `|event:${data.event}` +
+    `|date:${data.date}` +
+    `|time:${data.time}` +
+    `|zone:${data.zone}` +
+    `|row:${data.row}` +
+    `|seat:${data.seat}` +
+    `|price:${data.price}`;
 
+  document.getElementById("payloadText").textContent = qrPayload;
+
+  // --- generate QR ---
   new QRCode(document.getElementById("qr"), {
     text: qrPayload,
-    width: 220,
-    height: 220,
+    width: 200,
+    height: 200,
     correctLevel: QRCode.CorrectLevel.M
   });
+
+  // авто-печать (если нужно — убери)
+  // setTimeout(() => window.print(), 400);
 </script>
 
 </body>
