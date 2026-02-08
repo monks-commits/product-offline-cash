@@ -838,7 +838,9 @@ if (cfg && cfg.color) {
 
       const cardsHtml = [];
       for (const t of tickets){
-        const payload = `order:${t.order_id}|show:${t.show_slug}|seat:${t.seat_label}`;
+        const payload = `order:CASH-${t.op_id}`;
+
+
 
         let qrDataUrl = "";
         try{
