@@ -8,8 +8,7 @@
   <link rel="stylesheet" href="../styles.css" />
 
   <!-- QR генерация в браузере -->
-  <div class="qr" data-payload="order:CASH-..."></div>
-
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
   <style>
     .hall-layout{display:flex;gap:24px;align-items:flex-start;}
@@ -839,37 +838,38 @@ if (cfg && cfg.color) {
 
       const cardsHtml = [];
       for (const t of tickets){
-  const payload = `order:CASH-${t.op_id}`;
+        const payload = `order:${t.order_id}|show:${t.show_slug}|seat:${t.seat_label}`;
 
-  cardsHtml.push(`
-    <div class="t">
-      <div class="h">
-        <div class="theatre">${theatre}</div>
-        <div class="ord">Канал: Каса<br/>OP: ${t.op_id}</div>
-      </div>
-      <div class="show">${title}</div>
-      <div class="meta">
-        ${dt ? `<div>Дата/час: ${dt}</div>` : ``}
-        <div><b>${seatKeyToHuman(t.seat_label)}</b></div>
-        ${seance ? `<div class="muted">Seance: ${seance}</div>` : ``}
-        <div class="muted">Order: ${t.order_id}</div>
-      </div>
-      <div class="price">Ціна: ${t.price} грн</div>
+        let qrDataUrl = "";
+        try{
+          qrDataUrl = await window.QRCode.toDataURL(payload, { width: 320, margin: 2, errorCorrectionLevel: "M" });
 
-      <div class="qr" data-payload="${payload}"></div>
-        <div style="font-size:10px;word-break:break-all;text-align:center">
-          ${payload}
-        </div>
-      </div>
+        }catch(e){ qrDataUrl = ""; }
 
-      <div class="note">
-        Квиток дійсний на одну особу. Зберігайте до кінця вистави.<br/>
-        Для гарантованого сканування натисніть SYNC (коли є інтернет).
-      </div>
-    </div>
-  `);
-}
+        cardsHtml.push(`
+          <div class="t">
+            <div class="h">
+              <div class="theatre">${theatre}</div>
+              <div class="ord">Канал: Каса<br/>OP: ${t.op_id}</div>
+            </div>
+            <div class="show">${title}</div>
+            <div class="meta">
+              ${dt ? `<div>Дата/час: ${dt}</div>` : ``}
+              <div><b>${seatKeyToHuman(t.seat_label)}</b></div>
+              ${seance ? `<div class="muted">Seance: ${seance}</div>` : ``}
+              <div class="muted">Order: ${t.order_id}</div>
+            </div>
+            <div class="price">Ціна: ${t.price} грн</div>
 
+            ${qrDataUrl ? `<img class="qr" src="${qrDataUrl}" alt="QR"/>` : `<div class="qr-miss">QR не згенеровано</div>`}
+
+            <div class="note">
+              Квиток дійсний на одну особу. Зберігайте до кінця вистави.<br/>
+              Для гарантованого сканування натисніть SYNC (коли є інтернет).
+            </div>
+          </div>
+        `);
+      }
 
       const html = `<!doctype html>
 <html lang="uk">
@@ -894,36 +894,9 @@ if (cfg && cfg.color) {
 </style>
 </head>
 <body>
-  <div class="wrap">
-    ${cardsHtml.join("")}
-  </div>
-
-  <script>
-    (function () {
-      if (!window.QRCode) return;
-
-      document.querySelectorAll(".qr").forEach(function (el) {
-        var payload = el.getAttribute("data-payload"); 
-        
-        if (!payload) return;
-
-        try {
-          new QRCode(el, {
-            text: payload,
-            width: 180,
-            height: 180,
-            correctLevel: QRCode.CorrectLevel.M
-          });
-        } catch (e) {
-          el.innerHTML = "QR error";
-        }
-      });
-    })();
-  </script>
-
+  <div class="wrap">${cardsHtml.join("")}</div>
 </body>
 </html>`;
-
 
       const w = window.open("", "_blank");
       if (!w){ alert("Браузер заблокував pop-up. Дозволь відкриття вікон для друку."); return; }
