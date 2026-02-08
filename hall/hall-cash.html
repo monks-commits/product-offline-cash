@@ -895,6 +895,21 @@ if (cfg && cfg.color) {
 </head>
 <body>
   <div class="wrap">${cardsHtml.join("")}</div>
+
+  <script>
+    document.querySelectorAll(".qr").forEach(el => {
+      const payload = el.dataset.payload;
+      if (!payload) return;
+
+      new QRCode(el, {
+        text: payload,
+        width: 180,
+        height: 180,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    });
+  </script>
+
 </body>
 </html>`;
 
