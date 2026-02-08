@@ -903,7 +903,8 @@ if (cfg && cfg.color) {
       if (!window.QRCode) return;
 
       document.querySelectorAll(".qr").forEach(function (el) {
-        var payload = el.getAttribute("data-payload");
+        var payload = el.getAttribute("data-payload"); 
+        
         if (!payload) return;
 
         try {
