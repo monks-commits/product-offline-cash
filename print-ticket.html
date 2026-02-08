@@ -66,27 +66,26 @@ h1{font-size:16px;margin:0 0 8px}
   const seat  = p.get("seat")  || "";
   const price = p.get("price") || "";
 
-  // ⚠️ КРИТИЧНО: формат для scanner.js
-  // scanner принимает офлайн ТОЛЬКО если начинается с order:CASH-
-  const qrPayload =
+  if(seat)  document.getElementById("rowSeat").textContent  = "Місце: " + seat;
+  if(price) document.getElementById("rowPrice").textContent = "Ціна: " + price + " грн";
+
+  // 🔑 КЛЮЧЕВА СТРОКА — формат для scanner.js
+  const payload =
     "order:CASH-" +
     Date.now().toString(36) + "-" +
     Math.random().toString(36).slice(2,8);
-
-  if(seat)  document.getElementById("rowSeat").textContent  = "Місце: " + seat;
-  if(price) document.getElementById("rowPrice").textContent = "Ціна: " + price + " грн";
 
   const box = document.getElementById("qr");
   box.innerHTML = "";
 
   new QRCode(box,{
-    text: qrPayload,
+    text: payload,
     width:110,
     height:110,
     correctLevel: QRCode.CorrectLevel.M
   });
-
 })();
 </script>
+
 </body>
 </html>
