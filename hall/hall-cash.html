@@ -894,24 +894,35 @@ if (cfg && cfg.color) {
 </style>
 </head>
 <body>
-  <div class="wrap">${cardsHtml.join("")}</div>
+  <div class="wrap">
+    ${cardsHtml.join("")}
+  </div>
 
   <script>
-    document.querySelectorAll(".qr").forEach(el => {
-      const payload = el.dataset.payload;
-      if (!payload) return;
+    (function () {
+      if (!window.QRCode) return;
 
-      new QRCode(el, {
-        text: payload,
-        width: 180,
-        height: 180,
-        correctLevel: QRCode.CorrectLevel.M
+      document.querySelectorAll(".qr").forEach(function (el) {
+        var payload = el.getAttribute("data-payload");
+        if (!payload) return;
+
+        try {
+          new QRCode(el, {
+            text: payload,
+            width: 180,
+            height: 180,
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (e) {
+          el.innerHTML = "QR error";
+        }
       });
-    });
+    })();
   </script>
 
 </body>
 </html>`;
+
 
       const w = window.open("", "_blank");
       if (!w){ alert("Браузер заблокував pop-up. Дозволь відкриття вікон для друку."); return; }
