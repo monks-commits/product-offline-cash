@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
@@ -60,6 +60,12 @@
   <script src="../vendor/qrcode.min.js"></script>
 </head>
 <body>
+
+  <!-- 🔴 ВРЕМЕННЫЙ ТЕСТ -->
+  <div style="background:red;color:white;padding:10px;font-weight:900">
+    TEST PRINT/PRINT-QUEUE.HTML
+  </div>
+
   <div class="wrap">
     <div class="card no-print">
       <button class="btn btn-primary" onclick="window.print()">Друкувати</button>
@@ -90,13 +96,14 @@
       if(!payload || !Array.isArray(payload.items)) return;
 
       payload.items.forEach(it=>{
+
         // офлайн-каса: если QR нет — генерируем
-if(!it.qr_payload){
-  it.qr_payload =
-    "order:CASH-" +
-    Date.now().toString(36) + "-" +
-    Math.random().toString(36).slice(2,8);
-}
+        if(!it.qr_payload){
+          it.qr_payload =
+            "order:CASH-" +
+            Date.now().toString(36) + "-" +
+            Math.random().toString(36).slice(2,8);
+        }
 
         const t = document.createElement('div');
         t.className = 'ticket';
