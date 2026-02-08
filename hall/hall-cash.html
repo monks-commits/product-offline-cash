@@ -838,40 +838,37 @@ if (cfg && cfg.color) {
 
       const cardsHtml = [];
       for (const t of tickets){
-        const payload = `order:CASH-${t.op_id}`;
+  const payload = `order:CASH-${t.op_id}`;
 
+  cardsHtml.push(`
+    <div class="t">
+      <div class="h">
+        <div class="theatre">${theatre}</div>
+        <div class="ord">Канал: Каса<br/>OP: ${t.op_id}</div>
+      </div>
+      <div class="show">${title}</div>
+      <div class="meta">
+        ${dt ? `<div>Дата/час: ${dt}</div>` : ``}
+        <div><b>${seatKeyToHuman(t.seat_label)}</b></div>
+        ${seance ? `<div class="muted">Seance: ${seance}</div>` : ``}
+        <div class="muted">Order: ${t.order_id}</div>
+      </div>
+      <div class="price">Ціна: ${t.price} грн</div>
 
+      <div class="qr">
+        <div style="font-size:10px;word-break:break-all;text-align:center">
+          ${payload}
+        </div>
+      </div>
 
-        let qrDataUrl = "";
-        try{
-          qrDataUrl = await window.QRCode.toDataURL(payload, { width: 320, margin: 2, errorCorrectionLevel: "M" });
+      <div class="note">
+        Квиток дійсний на одну особу. Зберігайте до кінця вистави.<br/>
+        Для гарантованого сканування натисніть SYNC (коли є інтернет).
+      </div>
+    </div>
+  `);
+}
 
-        }catch(e){ qrDataUrl = ""; }
-
-        cardsHtml.push(`
-          <div class="t">
-            <div class="h">
-              <div class="theatre">${theatre}</div>
-              <div class="ord">Канал: Каса<br/>OP: ${t.op_id}</div>
-            </div>
-            <div class="show">${title}</div>
-            <div class="meta">
-              ${dt ? `<div>Дата/час: ${dt}</div>` : ``}
-              <div><b>${seatKeyToHuman(t.seat_label)}</b></div>
-              ${seance ? `<div class="muted">Seance: ${seance}</div>` : ``}
-              <div class="muted">Order: ${t.order_id}</div>
-            </div>
-            <div class="price">Ціна: ${t.price} грн</div>
-
-            ${qrDataUrl ? `<img class="qr" src="${qrDataUrl}" alt="QR"/>` : `<div class="qr-miss">QR не згенеровано</div>`}
-
-            <div class="note">
-              Квиток дійсний на одну особу. Зберігайте до кінця вистави.<br/>
-              Для гарантованого сканування натисніть SYNC (коли є інтернет).
-            </div>
-          </div>
-        `);
-      }
 
       const html = `<!doctype html>
 <html lang="uk">
