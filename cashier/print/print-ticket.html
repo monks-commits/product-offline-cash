@@ -2,160 +2,117 @@
 <html lang="uk">
 <head>
   <meta charset="utf-8" />
-  <title>Друк квитка</title>
+  <title>Квиток (офлайн)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- QR generator -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <!-- QR библиотека -->
+  <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <style>
-    /* ===== ТЕРМОПРИНТЕР =====
-       ширина: 58–80 мм
-       ориентация: горизонтальная
-    */
-    @media print {
-      body { margin: 0; }
-    }
-
     body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #fff;
-      color: #000;
       margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: #f8fafc;
     }
 
     .ticket {
-      width: 72mm;
-      padding: 6mm;
-      box-sizing: border-box;
+      max-width: 420px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12);
     }
 
     .title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 800;
-      text-align: center;
-      margin-bottom: 4mm;
+      margin-bottom: 6px;
     }
 
-    .line {
-      font-size: 13px;
-      margin-bottom: 2mm;
+    .meta {
+      font-size: 14px;
+      margin-bottom: 10px;
     }
 
-    .line b {
-      font-weight: 700;
-    }
-
-    .sep {
-      border-top: 1px dashed #000;
-      margin: 4mm 0;
+    .meta div {
+      margin: 2px 0;
     }
 
     .qr-wrap {
       display: flex;
       justify-content: center;
-      margin: 4mm 0;
+      margin-top: 14px;
+      margin-bottom: 10px;
     }
 
-    .qr-note {
-      text-align: center;
-      font-size: 11px;
-      margin-top: 2mm;
+    .qr {
+      width: 240px;
+      height: 240px;
     }
 
-    .footer {
-      text-align: center;
+    .payload {
       font-size: 11px;
-      margin-top: 4mm;
+      color: #555;
+      word-break: break-all;
+      margin-top: 8px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<div class="ticket">
-  <div class="title" id="tTitle">Вистава</div>
+  <div class="ticket">
+    <div class="title" id="tTitle">—</div>
 
-  <div class="line"><b>Дата:</b> <span id="tDate">—</span></div>
-  <div class="line"><b>Час:</b> <span id="tTime">—</span></div>
-  <div class="line"><b>Місце:</b> <span id="tSeat">—</span></div>
-  <div class="line"><b>Сеанс:</b> <span id="tSeance">—</span></div>
-  <div class="line"><b>Ціна:</b> <span id="tPrice">—</span> грн</div>
+    <div class="meta">
+      <div><b>Дата:</b> <span id="tDate">—</span></div>
+      <div><b>Час:</b> <span id="tTime">—</span></div>
+      <div><b>Місце:</b> <span id="tSeat">—</span></div>
+      <div><b>Ціна:</b> <span id="tPrice">—</span> грн</div>
+    </div>
 
-  <div class="sep"></div>
+    <div class="qr-wrap">
+      <div id="qr" class="qr"></div>
+    </div>
 
-  <!-- QR занимает ~1/3 билета -->
-  <div class="qr-wrap">
-    <canvas id="qr"></canvas>
+    <div class="payload" id="payloadText"></div>
   </div>
-
-  <div class="qr-note">
-    Предʼявіть QR контролеру
-  </div>
-
-  <div class="sep"></div>
-
-  <div class="footer">
-    Vash Admin TM • офлайн каса
-  </div>
-</div>
 
 <script>
-/*
-  ОЖИДАЕМЫЕ ПАРАМЕТРЫ (через query или window.printData):
-  - title
-  - date
-  - time
-  - seat
-  - seance_id
-  - price
-  - order_id
-*/
+  const p = new URLSearchParams(location.search);
 
-// 1. Получаем данные
-const params = new URLSearchParams(location.search);
+  const data = {
+    title:  p.get("title")  || "Квиток",
+    date:   p.get("date")   || "",
+    time:   p.get("time")   || "",
+    seat:   p.get("seat")   || "",
+    price:  p.get("price")  || "",
+    order:  p.get("order")  || ("CASH-" + Date.now())
+  };
 
-const data = {
-  title: params.get("title") || "Вистава",
-  date: params.get("date") || "",
-  time: params.get("time") || "",
-  seat: params.get("seat") || "",
-  seance: params.get("seance") || "",
-  price: params.get("price") || "",
-  order: params.get("order") || "CASH",
-  ts: new Date().toISOString()
-};
+  // Заполняем текст
+  document.getElementById("tTitle").textContent = data.title;
+  document.getElementById("tDate").textContent  = data.date;
+  document.getElementById("tTime").textContent  = data.time;
+  document.getElementById("tSeat").textContent  = data.seat;
+  document.getElementById("tPrice").textContent = data.price;
 
-// 2. Заполняем текст
-document.getElementById("tTitle").textContent  = data.title;
-document.getElementById("tDate").textContent   = data.date;
-document.getElementById("tTime").textContent   = data.time;
-document.getElementById("tSeat").textContent   = data.seat;
-document.getElementById("tSeance").textContent = data.seance;
-document.getElementById("tPrice").textContent  = data.price;
+  // QR payload — КЛЮЧЕВО
+  const qrPayload =
+    "order:" + data.order +
+    "|seat:" + data.seat +
+    "|date:" + data.date +
+    "|time:" + data.time;
 
-// 3. Формируем QR payload
-// ⛔ ВАЖНО: формат совместим с scanner.js (Шевченко)
-const qrPayload =
-  `order:CASH|${data.seance}|${data.seat}|${data.order}|${data.ts}`;
+  document.getElementById("payloadText").textContent = qrPayload;
 
-// 4. Генерируем QR (под камеру телефона)
-QRCode.toCanvas(
-  document.getElementById("qr"),
-  qrPayload,
-  {
-    width: 180,
-    margin: 1,
-    errorCorrectionLevel: "M"
-  },
-  function (err) {
-    if (err) console.error(err);
-  }
-);
-
-// 5. Автопечать
-setTimeout(() => {
-  window.print();
-}, 300);
+  new QRCode(document.getElementById("qr"), {
+    text: qrPayload,
+    width: 240,
+    height: 240,
+    correctLevel: QRCode.CorrectLevel.M
+  });
 </script>
 
 </body>
