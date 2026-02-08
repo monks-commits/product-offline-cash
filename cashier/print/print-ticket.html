@@ -1,95 +1,164 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <title>Квиток</title>
 
 <style>
-@media print {
-  body { margin: 0; }
-}
+  /* ====== PAGE ====== */
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
 
-body {
-  width: 72mm;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  color: #000;
-}
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #000;
+  }
 
-.ticket {
-  display: flex;
-  gap: 6mm;
-  padding: 4mm;
-}
+  .ticket {
+    width: 80mm;
+    padding: 6mm 5mm 4mm 5mm;
+    box-sizing: border-box;
+  }
 
-.ticket-text {
-  width: 66%;
-}
+  /* ====== TEXT BLOCK ====== */
+  .title {
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 4mm;
+  }
 
-.ticket-text h1 {
-  font-size: 14px;
-  margin: 0 0 4px;
-}
+  .line {
+    font-size: 12px;
+    margin-bottom: 2mm;
+  }
 
-.line {
-  margin: 2px 0;
-}
+  .line b {
+    font-weight: 700;
+  }
 
-.small {
-  font-size: 10px;
-}
+  .divider {
+    border-top: 1px dashed #000;
+    margin: 4mm 0;
+  }
 
-.ticket-qr {
-  width: 34%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  /* ====== QR BLOCK ====== */
+  .qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 4mm;
+  }
 
-.ticket-qr canvas {
-  width: 26mm;
-  height: 26mm;
-}
+  #qrcode {
+    width: 32mm;
+    height: 32mm;
+  }
+
+  .qr-caption {
+    font-size: 9px;
+    text-align: center;
+    margin-top: 2mm;
+  }
+
+  /* ====== HIDE UI ON PRINT ====== */
+  @media print {
+    body { margin: 0; }
+  }
 </style>
 </head>
 
 <body>
 
 <div class="ticket">
-  <div class="ticket-text">
-    <h1 id="t-title">Концерт</h1>
+  <div class="title" id="t_title">Назва події</div>
 
-    <div class="line">📅 <span id="t-date">10.02.2026</span> ⏰ <span id="t-time">19:00</span></div>
-    <div class="line">Зал: <b id="t-zone">Партер</b></div>
-    <div class="line">Ряд: <b id="t-row">7</b> Місце: <b id="t-seat">10</b></div>
+  <div class="line"><b>Дата:</b> <span id="t_date">—</span></div>
+  <div class="line"><b>Час:</b> <span id="t_time">—</span></div>
+  <div class="line"><b>Місце:</b> <span id="t_seat">—</span></div>
+  <div class="line"><b>Ціна:</b> <span id="t_price">—</span></div>
 
-    <div class="line">Ціна: <b id="t-price">150 грн</b></div>
+  <div class="divider"></div>
 
-    <div class="line small">Білет № <span id="t-id">A20260210-1900-P7-M10</span></div>
-    <div class="line small">Касир: <span id="t-cashier">kassa-1</span></div>
+  <div class="qr-wrap">
+    <div id="qrcode"></div>
   </div>
 
-  <div class="ticket-qr">
-    <canvas id="qr"></canvas>
+  <div class="qr-caption">
+    Предʼявіть QR контролеру
   </div>
 </div>
 
-<script src="./qrcode.min.js"></script>
+<!-- QR LIB -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <script>
-const data = {
-  id: "A20260210-1900-P7-M10"
+/* ==========================
+   DATA SOURCE
+========================== */
+
+/*
+  Ожидаемый формат (строка):
+  SEANCE_ID|SEAT|ORDER_ID|TIMESTAMP
+*/
+
+let ticket = {
+  title: "Подія",
+  date: "2026-02-10",
+  time: "19:00",
+  seat: "P3-M12",
+  price: "200 грн",
+  qr: ""
 };
 
-// QR
-QRCode.toCanvas(
-  document.getElementById("qr"),
-  data.id,
-  { width: 260, margin: 1 }
-);
+/* === 1. из query (?data=...) === */
+const qs = new URLSearchParams(location.search);
+if (qs.get("data")) {
+  try {
+    const d = JSON.parse(decodeURIComponent(qs.get("data")));
+    Object.assign(ticket, d);
+  } catch {}
+}
 
-// автопечать
-window.onload = () => window.print();
+/* === 2. из postMessage (предпочтительно) === */
+window.addEventListener("message", e => {
+  if (!e.data || !e.data.qr) return;
+  Object.assign(ticket, e.data);
+  render();
+});
+
+/* ==========================
+   RENDER
+========================== */
+function render(){
+  t_title.textContent = ticket.title;
+  t_date.textContent  = ticket.date;
+  t_time.textContent  = ticket.time;
+  t_seat.textContent  = ticket.seat;
+  t_price.textContent = ticket.price;
+
+  document.getElementById("qrcode").innerHTML = "";
+
+  new QRCode(document.getElementById("qrcode"), {
+    text: ticket.qr,
+    width: 240,
+    height: 240,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  setTimeout(()=>window.print(), 200);
+}
+
+/* ==========================
+   INIT (demo fallback)
+========================== */
+if (!ticket.qr) {
+  ticket.qr = "koncert-2026-02-10-19-00|P3-M12|ORD-000154|2026-02-10T18:42";
+}
+render();
 </script>
 
 </body>
