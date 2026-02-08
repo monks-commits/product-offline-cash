@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Квиток</title>
+
+<style>
+@media print {
+  body { margin: 0; }
+}
+
+body {
+  width: 72mm;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #000;
+}
+
+.ticket {
+  display: flex;
+  gap: 6mm;
+  padding: 4mm;
+}
+
+.ticket-text {
+  width: 66%;
+}
+
+.ticket-text h1 {
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.line {
+  margin: 2px 0;
+}
+
+.small {
+  font-size: 10px;
+}
+
+.ticket-qr {
+  width: 34%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-qr canvas {
+  width: 26mm;
+  height: 26mm;
+}
+</style>
+</head>
+
+<body>
+
+<div class="ticket">
+  <div class="ticket-text">
+    <h1 id="t-title">Концерт</h1>
+
+    <div class="line">📅 <span id="t-date">10.02.2026</span> ⏰ <span id="t-time">19:00</span></div>
+    <div class="line">Зал: <b id="t-zone">Партер</b></div>
+    <div class="line">Ряд: <b id="t-row">7</b> Місце: <b id="t-seat">10</b></div>
+
+    <div class="line">Ціна: <b id="t-price">150 грн</b></div>
+
+    <div class="line small">Білет № <span id="t-id">A20260210-1900-P7-M10</span></div>
+    <div class="line small">Касир: <span id="t-cashier">kassa-1</span></div>
+  </div>
+
+  <div class="ticket-qr">
+    <canvas id="qr"></canvas>
+  </div>
+</div>
+
+<script src="./qrcode.min.js"></script>
+<script>
+const data = {
+  id: "A20260210-1900-P7-M10"
+};
+
+// QR
+QRCode.toCanvas(
+  document.getElementById("qr"),
+  data.id,
+  { width: 260, margin: 1 }
+);
+
+// автопечать
+window.onload = () => window.print();
+</script>
+
+</body>
+</html>
