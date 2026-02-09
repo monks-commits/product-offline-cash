@@ -5,6 +5,6 @@
     "P4-4": { "price": 180, "class": "seat--180", "sale": true }
   },
   "seat_overrides": {
-    "P3-M5": { "sale": false }
+    "P3-M5": { "sale": false } 
   }
 }
