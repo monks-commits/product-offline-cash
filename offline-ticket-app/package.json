@@ -1,0 +1,17 @@
+{
+  "name": "offline-ticket-app",
+  "version": "1.0.0",
+  "description": "Автономна каса театру",
+  "main": "main.js",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
