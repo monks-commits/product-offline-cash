@@ -187,7 +187,6 @@
             </div>
           </div>
 
-
         <aside class="hall-sidebar">
           <div class="card hall-card">
             <h2 class="hall-summary-title">Кошик (каса)</h2>
@@ -260,10 +259,7 @@
         <label for="inpCashierId">cashier_id (наприклад: kassa-1)</label>
         <input id="inpCashierId" placeholder="kassa-1" />
       </div>
-
-     
-
-     
+    
 
       <div class="modalActions">
         <button id="btnModalClose" class="btn btn-ghost" style="padding:10px 12px;">Закрити</button>
@@ -276,8 +272,6 @@
     const qs = new URLSearchParams(location.search);
     const showSlug  = (qs.get("show")   || "").trim();
 const SEANCE_ID = (qs.get("seance") || "").trim();
-
-    
 
 let SEANCE_CONFIG = null;
 
@@ -295,8 +289,7 @@ async function loadSeanceConfig() {
     return null;
   }
 }
-
-    
+   
    const parterRows = Array.from({ length: 18 }, (_, i) => ({
   row: i + 1,
   seats: 20,
@@ -304,8 +297,6 @@ async function loadSeanceConfig() {
   price: 0,
   className: ""
 }));
-
-
 
     const amphiLeftRows  = [
       {row:19,seats:11},{row:20,seats:11},{row:21,seats:11},{row:22,seats:11},{row:23,seats:11},
@@ -324,8 +315,6 @@ async function loadSeanceConfig() {
   zone: "Ложа",
   className: ""
 }));
-
-
 
     function seatKey(meta){
       const row = meta.row ?? 0;
@@ -367,8 +356,7 @@ async function loadSeanceConfig() {
       return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    
-    
+      
     function getCashierId(){
       return localStorage.getItem("cashier_id") || "kassa-1";
     }
@@ -667,9 +655,7 @@ saveCashPatch(CASH_PATCH);
       const ss = String(d.getSeconds()).padStart(2,"0");
       const rnd = Math.random().toString(16).slice(2,8);
       return `KR-SHEV-${yyyy}${mm}${dd}-${hh}${mi}${ss}-${rnd}`;
-    }
-
-   
+    }   
 
 // ---- печать билетов (с QR) ----
     async function openPrintWindowOffline(tickets, meta){
@@ -748,10 +734,7 @@ saveCashPatch(CASH_PATCH);
 
       setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 250);
     }
-
-
-    
-    
+ 
    function calcCashOrderId(seanceId, showSlug, opId){
   return `CASH-${seanceId}-${opId}`;
 } 
@@ -784,7 +767,7 @@ saveCashPatch(CASH_PATCH);
       
 
       for (const k of keys){
-        if (takenSeatsOnline.has(k)) continue;
+        
         CASH_PATCH[k] = { status: "sold", ts: Date.now(), op_id };
       }
       saveCashPatch(CASH_PATCH);
@@ -1049,18 +1032,15 @@ seatsRow.appendChild(
       alert("Збережено.");
     });
     modalBack?.addEventListener("click",(e)=>{ if(e.target===modalBack) closeModal(); });
-
    
     // ---- boot ----
     (async ()=>{
       
       setCashierId(getCashierId());
-
       
       await loadShowMeta();
 SEANCE_CONFIG = await loadSeanceConfig();
 CASH_PATCH = loadCashPatch();
-
 
       renderParter();
       renderLodges();
