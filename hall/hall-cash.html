@@ -101,7 +101,7 @@
     .btn-sell{background:#fca5a5;color:#111827;}
     .btn-reserve{background:#fed7aa;color:#111827;}
     .btn-clear{background:#e5e7eb;color:#111827;}
-    .btn-sync{background:#bbf7d0;color:#111827;}
+    
     .btn-reset{background:#111827;color:#fff;margin-top:6px;}
     .btn-ghost{background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0;}
 
@@ -140,15 +140,7 @@
       .hall-sidebar{width:auto;}
     }
 
-    /* -------------------- EMBED MODE (backoffice) -------------------- */
-    html.embed .hall-sidebar { display: none !important; }
-    html.embed .cash-badge { display: none !important; }
-    html.embed .row-price-list { display: none !important; }
-
-    html.embed .container { max-width: 100% !important; }
-    html.embed .hall-layout { gap: 0 !important; }
-    html.embed .hall-scroll { padding: 8px !important; }
-    html.embed .hall-inner { width: max(1200px, 100%) !important; }
+   
   </style>
 </head>
 
@@ -161,10 +153,7 @@
 
       <div class="cash-badge">
         <span class="pill dark">Режим: <b>каса</b></span>
-        <span class="pill" id="netPill">—</span>
-        <span class="pill" id="syncPill">SYNC: —</span>
-        <span class="pill" id="qPill">Черга: 0</span>
-        <span class="pill" id="onlineBlockPill">tickets: —</span>
+        
         <button id="btnSettings" class="btn btn-ghost" style="padding:8px 10px;border-radius:999px;">⚙ Налаштування</button>
       </div>
 
@@ -206,11 +195,7 @@
             </div>
           </div>
 
-        <div class="row-price-list">
-            <
-            <div class="row-price"><span>Vash Admin TM</span><span class="dots"></span><b></b></div>
-          </div>
-        </div>  
+        
 
         <aside class="hall-sidebar">
           <div class="card hall-card">
@@ -225,7 +210,7 @@
               <button id="btn-sell" class="btn btn-sell" disabled>ПРОДАТИ (КАСА) + ДРУК</button>
               <button id="btn-reserve" class="btn btn-reserve" disabled>ДО РЕЗЕРВУ</button>
               <button id="btn-clear" class="btn btn-clear">ОЧИСТИТИ</button>
-              <button id="btn-sync" class="btn btn-sync">SYNC (відправити чергу)</button>
+            
               <button id="btn-reprint" class="btn btn-ghost" disabled>Повторити друк останньої продажі</button>
               <button id="btn-reset" class="btn btn-reset">Скинути локальні зміни для цього сеансу</button>
             </div>
@@ -256,16 +241,16 @@
               </table>
             </div>
 
-            <div class="note">
-              <b>Офлайн:</b> “Продати” друкує квиток з QR (order/show/seat) і кладе операцію в чергу.
-              <br><b>Онлайн:</b> коли є інternet — натисніть <b>SYNC</b> (або він спрацює автоматично при появі звʼязку).
-              <br><b>Контроль:</b> сканер 100% прийме квиток після SYNC (бо тоді він зʼявиться в tickets).
-            </div>
+           <div class="note">
+  Каса працює повністю офлайн.
+  <br>Квитки друкуються з QR-кодом та зберігаються локально на цьому ПК.
+  <br>Інтернет-зʼєднання не потрібне.
+</div>
 
-            <div class="smallline">
-              Касир: <span class="pill" id="cashierIdPill">—</span>
-              • Останній SYNC: <span class="pill" id="lastSyncPill">—</span>
-            </div>
+<div class="smallline">
+  Касир: <span class="pill" id="cashierIdPill">—</span>
+</div>
+
           </div>
         </aside>
       </div>
@@ -285,18 +270,13 @@
         <input id="inpCashierId" placeholder="kassa-1" />
       </div>
 
-      <div class="formRow">
-        <label for="inpSecret">CASHIER_SYNC_SECRET (якщо використовується)</label>
-        <input id="inpSecret" placeholder="(можна лишити пустим)" />
-      </div>
+     
 
-      <div class="k-mini">
-        Якщо секрет пустий — запит піде без заголовка <code>x-cashier-secret</code>.
-      </div>
+     
 
       <div class="modalActions">
         <button id="btnModalClose" class="btn btn-ghost" style="padding:10px 12px;">Закрити</button>
-        <button id="btnModalSave" class="btn btn-sync" style="padding:10px 12px;">Зберегти</button>
+       
       </div>
     </div>
   </div>
@@ -306,52 +286,13 @@
     const showSlug  = (qs.get("show")   || "").trim();
 const SEANCE_ID = (qs.get("seance") || "").trim();
 
-    // embed mode (backoffice): ?embed=1
-    const EMBED = qs.get("embed") === "1";
-    if (EMBED) document.documentElement.classList.add("embed");
-
-    // Supabase project (читання проданих місць)
-    const SUPABASE_URL = "https://fhusjlkneckbvnrdhbil.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_nCCfptJOb8Lzy1uAwGBJzA_OJtDneTS";
-
-    // Edge Function cash-sync-ts (ВАЖНО!)
-    const PROJECT_REF = "fhusjlkneckbvnrdhbil";
-    const CASH_SYNC_V1 = `https://${PROJECT_REF}.functions.supabase.co/functions/v1/cash-sync-ts`;
+    
 
 let SEANCE_CONFIG = null;
 
 async function loadSeanceConfig() {
   if (!SEANCE_ID) return null;
 
-  // 1️⃣ пробуем Supabase
-  try {
-    const url =
-      `${SUPABASE_URL}/rest/v1/seances_pricing` +
-      `?seance_id=eq.${encodeURIComponent(SEANCE_ID)}` +
-      `&select=pricing,seat_overrides`;
-
-    const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-      cache: "no-store"
-    });
-
-    if (res.ok) {
-      const rows = await res.json();
-      if (rows && rows.length) {
-        return {
-          pricing: rows[0].pricing || {},
-          seat_overrides: rows[0].seat_overrides || {}
-        };
-      }
-    }
-  } catch (e) {
-    // молча падаем дальше
-  }
-
-  // 2️⃣ fallback на локальный файл
   try {
     const res = await fetch(`../data/seances/${SEANCE_ID}.json`, {
       cache: "no-store"
@@ -363,7 +304,6 @@ async function loadSeanceConfig() {
     return null;
   }
 }
-
 
     
    const parterRows = Array.from({ length: 18 }, (_, i) => ({
@@ -436,33 +376,8 @@ async function loadSeanceConfig() {
       return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    function setNetPill(){
-      const el = document.getElementById("netPill");
-      if(!el) return;
-      const on = navigator.onLine;
-      el.className = "pill " + (on ? "ok" : "bad");
-      el.textContent = on ? "Online" : "Offline";
-    }
-
-    function setSyncPill(text, kind){
-      const el = document.getElementById("syncPill");
-      if(!el) return;
-      el.className = "pill " + (kind || "");
-      el.textContent = text;
-    }
-
-    function setQp(n){
-      const el = document.getElementById("qPill");
-      if(el) el.textContent = `Черга: ${n}`;
-    }
-
-    function setTicketsPill(text, kind){
-      const el = document.getElementById("onlineBlockPill");
-      if(!el) return;
-      el.className = "pill " + (kind || "");
-      el.textContent = text;
-    }
-
+    
+    
     function getCashierId(){
       return localStorage.getItem("cashier_id") || "kassa-1";
     }
@@ -471,26 +386,7 @@ async function loadSeanceConfig() {
       const el = document.getElementById("cashierIdPill");
       if(el) el.textContent = getCashierId();
     }
-    function getCashierSecret(){
-      return localStorage.getItem("cashier_sync_secret") || "";
-    }
-    function setCashierSecret(v){
-      localStorage.setItem("cashier_sync_secret", v || "");
-    }
-
-    function lastSyncKey(){
-      return `cash_last_sync_${PROJECT_REF}`;
-    }
-    function setLastSync(ts){
-      localStorage.setItem(lastSyncKey(), String(ts||Date.now()));
-      const el = document.getElementById("lastSyncPill");
-      if(el) el.textContent = fmtTime(Number(localStorage.getItem(lastSyncKey())||0));
-    }
-    function initLastSync(){
-      const v = Number(localStorage.getItem(lastSyncKey())||0);
-      const el = document.getElementById("lastSyncPill");
-      if(el) el.textContent = v ? fmtTime(v) : "—";
-    }
+    
 
     // Cash log (локально, по seance)
     function cashLogKey(){
@@ -582,27 +478,7 @@ async function loadSeanceConfig() {
       renderCashLog();
     }
 
-    // Онлайн-проданные места из tickets (блокируем их)
-    const takenSeatsOnline = new Set();
-    async function loadTakenSeatsOnline(){
-      setTicketsPill("tickets: читання…", "warn");
-      if (!showSlug) { setTicketsPill("tickets: —", ""); return; }
-
-      const url = `${SUPABASE_URL}/rest/v1/tickets?show_slug=eq.${encodeURIComponent(showSlug)}&select=seat_label`;
-      try{
-        const res = await fetch(url, {
-          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) { setTicketsPill("tickets: помилка", "bad"); return; }
-        const rows = await res.json().catch(()=>[]);
-        takenSeatsOnline.clear();
-        rows.forEach(r => { if (r && r.seat_label) takenSeatsOnline.add(String(r.seat_label)); });
-        setTicketsPill(`tickets: ok (${takenSeatsOnline.size})`, "ok");
-      }catch(e){
-        setTicketsPill("tickets: нема інтернету", "bad");
-      }
-    }
-
+    
     // Локальные состояния кассы по seance_id
     function cashPatchKey(){
       return `cash_patch_${SEANCE_ID || showSlug || "unknown"}`;
@@ -618,35 +494,15 @@ async function loadSeanceConfig() {
       localStorage.setItem(cashPatchKey(), JSON.stringify(patch || {}));
     }
 
-    // Очередь операций
-    function opsQueueKey(){
-      return `cash_ops_queue_v1_${PROJECT_REF}`;
-    }
-    function loadQueue(){
-      try{
-        const raw = localStorage.getItem(opsQueueKey());
-        const arr = raw ? JSON.parse(raw) : [];
-        return Array.isArray(arr) ? arr : [];
-      }catch(e){ return []; }
-    }
-    function saveQueue(arr){
-      localStorage.setItem(opsQueueKey(), JSON.stringify(Array.isArray(arr) ? arr : []));
-      const n = (arr || []).length;
-      setQp(n);
-    }
-    function refreshQueueCount(){
-      const q = loadQueue();
-      setQp(q.length);
-    }
-
+   
     let CASH_PATCH = {};
     const selected = new Map(); // key -> {price}
     const seatButtons = new Map(); // key -> button
 
     function getEffectiveStatus(key){
-      if (takenSeatsOnline.has(key)) return "blocked";
-      return CASH_PATCH[key]?.status || "free";
-    }
+  return CASH_PATCH[key]?.status || "free";
+}
+
 
     function applyStatusClass(btn, status){
       btn.classList.remove("seat--sold","seat--reserved","seat--blocked");
@@ -793,12 +649,11 @@ if (cfg && cfg.color) {
       const keys = Array.from(selected.keys());
       if (!keys.length) return;
 
-      for (const k of keys){
-        if (takenSeatsOnline.has(k)) continue;
-        CASH_PATCH[k] = { status, ts: Date.now() };
-      }
-      saveCashPatch(CASH_PATCH);
-
+      
+     for (const k of keys){
+  CASH_PATCH[k] = { status, ts: Date.now() };
+}
+saveCashPatch(CASH_PATCH);
       pushCashLog({
         ts: Date.now(),
         type: status === "reserved" ? "RESERVE" : String(status||"").toUpperCase(),
@@ -823,11 +678,7 @@ if (cfg && cfg.color) {
       return `KR-SHEV-${yyyy}${mm}${dd}-${hh}${mi}${ss}-${rnd}`;
     }
 
-    // order_id как на сервере (cash-sync-ts)
-    function calcCashOrderId(seance_id, show_slug, op_id){
-      const base = seance_id ? seance_id : show_slug;
-      return `CASH-${base}-${op_id}`;
-    }
+   
 
 // ---- печать билетов (с QR) ----
     async function openPrintWindowOffline(tickets, meta){
@@ -865,7 +716,7 @@ if (cfg && cfg.color) {
 
             <div class="note">
               Квиток дійсний на одну особу. Зберігайте до кінця вистави.<br/>
-              Для гарантованого сканування натисніть SYNC (коли є інтернет).
+              
             </div>
           </div>
         `);
@@ -909,57 +760,10 @@ if (cfg && cfg.color) {
 
 
     
-    async function postCashSync(cashier_id, ops){
-      const secret = getCashierSecret().trim();
-      const headers = { "Content-Type": "application/json" };
-      if (secret) headers["x-cashier-secret"] = secret;
-
-      const res = await fetch(CASH_SYNC_V1, {
-        method:"POST",
-        headers,
-        body: JSON.stringify({ cashier_id, ops }),
-      });
-
-      const txt = await res.text();
-      let data = null;
-      try{ data = JSON.parse(txt); }catch(e){ data = { raw: txt }; }
-      return { ok: res.ok, status: res.status, data };
-    }
-
-    async function syncQueue(){
-      const queue = loadQueue();
-      if (!queue.length) { alert("Черга порожня."); return; }
-
-      const cashier_id = getCashierId();
-      setSyncPill("SYNC: відправка…", "warn");
-
-      const r = await postCashSync(cashier_id, queue);
-
-      if (!r.ok){
-        const msg = (r.data && (r.data.details || r.data.error)) ? (r.data.details || r.data.error) : "unknown";
-        setSyncPill("SYNC: помилка", "bad");
-        alert("SYNC помилка: " + msg);
-        return;
-      }
-
-      const resArr = Array.isArray(r.data?.results) ? r.data.results : [];
-      const okOps = new Set(resArr.filter(x => x && x.ok === true).map(x => x.op_id));
-
-      const left = queue.filter(op => !okOps.has(op.op_id));
-      saveQueue(left);
-
-      setLastSync(Date.now());
-      setSyncPill(`SYNC: ok=${okOps.size}, left=${left.length}`, okOps.size ? "ok" : "");
-
-      const bad = resArr.filter(x=>x && x.ok !== true);
-      if (bad.length){
-        const msg = bad.slice(0,6).map(x=>`${x.op_id}: ${(x.error||x.details||"error")}`).join("\n");
-        alert("SYNC частково з помилками:\n" + msg);
-      }
-
-      await loadTakenSeatsOnline();
-      reapplyAllStatuses();
-    }
+    
+   function calcCashOrderId(seanceId, showSlug, opId){
+  return `CASH-${seanceId}-${opId}`;
+} 
 
     // ---- ПРОДАЖА (офлайн) ----
     async function sellAndPrintOffline(){
@@ -986,9 +790,7 @@ if (cfg && cfg.color) {
         sold_at: new Date().toISOString(),
       };
 
-      const queue = loadQueue();
-      queue.push(op);
-      saveQueue(queue);
+      
 
       for (const k of keys){
         if (takenSeatsOnline.has(k)) continue;
@@ -1017,13 +819,7 @@ if (cfg && cfg.color) {
       reapplyAllStatuses();
       await openPrintWindowOffline(tickets, SHOW_META);
 
-      try{
-        if (navigator.onLine) {
-          const q2 = loadQueue();
-          if (q2.length) await syncQueue();
-        }
-      }catch(e){}
-    }
+}
 
     // ---- reprint last sale ----
     async function reprintLastSale(){
@@ -1213,7 +1009,7 @@ seatsRow.appendChild(
     document.getElementById("btn-clear")?.addEventListener("click", ()=> clearSelection());
     document.getElementById("btn-reserve")?.addEventListener("click", ()=> applyStatusToSelectedLocal("reserved"));
     document.getElementById("btn-sell")?.addEventListener("click", ()=> sellAndPrintOffline());
-    document.getElementById("btn-sync")?.addEventListener("click", ()=> syncQueue());
+   
     document.getElementById("btn-reprint")?.addEventListener("click", ()=> reprintLastSale());
 
     document.getElementById("btn-reset")?.addEventListener("click", ()=>{
@@ -1242,16 +1038,7 @@ seatsRow.appendChild(
       saveCashLog([]);
     });
 
-    // auto sync when online comes back
-    window.addEventListener("online", async ()=>{
-      setNetPill();
-      try{
-        const q = loadQueue();
-        if (q.length) await syncQueue();
-      }catch(e){}
-    });
-    window.addEventListener("offline", ()=> setNetPill());
-
+   
     // Settings modal
     const modalBack = document.getElementById("modalBack");
     function openModal(){
@@ -1272,159 +1059,17 @@ seatsRow.appendChild(
     });
     modalBack?.addEventListener("click",(e)=>{ if(e.target===modalBack) closeModal(); });
 
-    // -------------------- Backoffice iframe control via postMessage --------------------
-    function isTrustedMessage(ev){
-      // GitHub Pages: origin будет https://monks-commits.github.io
-      // Но на всякий: разрешаем тот же origin, что и у страницы
-      return !!ev && ev.origin === window.location.origin;
-    }
-
-    function applyStatusFromBackoffice(status, seats){
-      const keys = Array.isArray(seats) ? seats : [];
-      if(!keys.length) return;
-
-      // снимаем текущий выбор
-      clearSelection();
-
-      // локально применяем как будто кассир нажал кнопку
-      if(status === "reserved"){
-        // резерв (локально)
-        for(const k of keys){
-          if (takenSeatsOnline.has(k)) continue;
-          CASH_PATCH[k] = { status: "reserved", ts: Date.now() };
-        }
-        saveCashPatch(CASH_PATCH);
-        pushCashLog({
-          ts: Date.now(),
-          type: "RESERVE",
-          seats: keys,
-          total: keys.reduce((s,k)=>s + Number(seatButtons.get(k)?.dataset?.price || 0), 0)
-        });
-        reapplyAllStatuses();
-        return;
-      }
-
-      if(status === "sold"){
-        // продажа = то же, что sellAndPrintOffline(), но без кликов и с ценами из DOM
-        if(!SEANCE_ID){
-          alert("Немає seance_id (потрібні date/time в afisha.json).");
-          return;
-        }
-
-        const op_id = genOpId();
-
-        const prices = {};
-        for (const k of keys){
-          const b = seatButtons.get(k);
-          prices[k] = Number(b?.dataset?.price || 0);
-        }
-
-        const op = {
-          op_id,
-          type: "sale",
-          seance_id: SEANCE_ID,
-          show_slug: showSlug,
-          seats: keys,
-          prices,
-          sold_at: new Date().toISOString(),
-        };
-
-        const queue = loadQueue();
-        queue.push(op);
-        saveQueue(queue);
-
-        for (const k of keys){
-          if (takenSeatsOnline.has(k)) continue;
-          CASH_PATCH[k] = { status: "sold", ts: Date.now(), op_id };
-        }
-        saveCashPatch(CASH_PATCH);
-
-        const order_id = calcCashOrderId(SEANCE_ID, showSlug, op_id);
-        const tickets = keys.map(k => ({
-          op_id,
-          order_id,
-          show_slug: showSlug,
-          seat_label: k,
-          price: Number(prices[k] || 0),
-        }));
-
-        pushCashLog({
-          ts: Date.now(),
-          type: "SALE",
-          seats: keys,
-          total: tickets.reduce((s,t)=>s+(t.price||0),0),
-          tickets
-        });
-
-        reapplyAllStatuses();
-        openPrintWindowOffline(tickets, SHOW_META).catch(()=>{});
-
-        // если онлайн — пробуем синкнуть
-        setTimeout(async ()=>{
-          try{
-            if (navigator.onLine) {
-              const q2 = loadQueue();
-              if (q2.length) await syncQueue();
-            }
-          }catch(e){}
-        }, 50);
-
-        return;
-      }
-
-      // прочие статусы: просто применим локально
-      for(const k of keys){
-        if (takenSeatsOnline.has(k)) continue;
-        CASH_PATCH[k] = { status: String(status||"free"), ts: Date.now() };
-      }
-      saveCashPatch(CASH_PATCH);
-      reapplyAllStatuses();
-    }
-
-    function seatSearchFromBackoffice(key){
-      const k = String(key || "").trim();
-      if(!k) return;
-      const btn = seatButtons.get(k);
-      if(btn) btn.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
-      else alert("Не знайдено місце: " + k);
-    }
-
-    window.addEventListener("message", (ev)=>{
-      if(!isTrustedMessage(ev)) return;
-      const msg = ev.data || {};
-      if(msg.source !== "backoffice") return;
-
-      if(msg.type === "apply_status"){
-        const st = msg.payload?.status;
-        const seats = msg.payload?.seats;
-        applyStatusFromBackoffice(st, seats);
-        return;
-      }
-
-      if(msg.type === "seat_search"){
-        seatSearchFromBackoffice(msg.payload?.key);
-        return;
-      }
-
-      if(msg.type === "reload"){
-        location.reload();
-        return;
-      }
-    });
-
+   
     // ---- boot ----
     (async ()=>{
-      setNetPill();
-      initLastSync();
+      
       setCashierId(getCashierId());
 
-      setSyncPill("SYNC: —", "");
-      refreshQueueCount();
-
+      
       await loadShowMeta();
 SEANCE_CONFIG = await loadSeanceConfig();
 CASH_PATCH = loadCashPatch();
-await loadTakenSeatsOnline();
+
 
       renderParter();
       renderLodges();
