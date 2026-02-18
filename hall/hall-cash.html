@@ -11,6 +11,43 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
   <style>
+
+.cash-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  background:#111827;
+  color:#fff;
+  margin-bottom:20px;
+}
+
+.top-btn{
+  background:#374151;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  color:#fff;
+}
+
+.top-btn:hover{
+  background:#4b5563;
+}
+
+.top-info{
+  text-align:center;
+  font-weight:600;
+}
+
+.top-status{
+  font-weight:700;
+  color:#16a34a;
+}
+
+
+
     .hall-layout{display:flex;gap:24px;align-items:flex-start;}
     .hall-left{flex:1 1 auto;min-width:0;}
     .hall-sidebar{width:360px;flex:0 0 360px;}
@@ -137,6 +174,23 @@
 </head>
 
 <body>
+
+<div class="cash-topbar">
+  <button class="top-btn" onclick="goBack()">⬅ Назад</button>
+
+  <div class="top-info">
+    <div id="top-show">—</div>
+    <div id="top-seance">—</div>
+  </div>
+
+  <div class="top-status">
+    КАСА
+  </div>
+</div>
+
+
+
+
   <div id="site-header"></div>
 
   <main class="main">
@@ -270,10 +324,66 @@
 
   <script>
     const qs = new URLSearchParams(location.search);
-    const showSlug  = (qs.get("show")   || "").trim();
+let showSlug  = (qs.get("show")   || "").trim();
 const SEANCE_ID = (qs.get("seance") || "").trim();
 
+// если show не передан — берём его из seance_id
+if (!showSlug && SEANCE_ID) {
+  showSlug = SEANCE_ID.split("-")[0];
+}
+
 let SEANCE_CONFIG = null;
+
+async function initSeanceData() {
+
+  if (!SEANCE_ID) return;
+
+  // ---------- 1. SQLite ----------
+  const info = await window.api.getSeanceInfo(SEANCE_ID);
+
+  const summaryShow   = document.getElementById("summary-show");
+  const summarySeance = document.getElementById("summary-seance");
+  const topShow   = document.getElementById("top-show");
+  const topSeance = document.getElementById("top-seance");
+
+  if (info) {
+
+    const titleText  = info.title || showSlug || "—";
+    const seanceText = (info.date || "") + " " + (info.time || "");
+
+    if (summaryShow)   summaryShow.textContent   = "Вистава: " + titleText;
+    if (summarySeance) summarySeance.textContent = "Seance: " + seanceText;
+    if (topShow)       topShow.textContent       = titleText;
+    if (topSeance)     topSeance.textContent     = seanceText;
+
+  } else {
+
+    const fallbackTitle  = showSlug || "—";
+    const fallbackSeance = SEANCE_ID;
+
+    if (summaryShow)   summaryShow.textContent   = "Вистава: " + fallbackTitle;
+    if (summarySeance) summarySeance.textContent = "Seance: " + fallbackSeance;
+    if (topShow)       topShow.textContent       = fallbackTitle;
+    if (topSeance)     topSeance.textContent     = fallbackSeance;
+  }
+
+  // ---------- 2. JSON ----------
+  const json = await window.api.loadSeanceJson(SEANCE_ID);
+
+  if (json) {
+    SEANCE_CONFIG = json;
+
+    if (json.pricing && typeof applyPricing === "function") {
+      applyPricing(json.pricing);
+    }
+  }
+}
+
+
+ 
+
+
+initSeanceData();
 
 async function loadSeanceConfig() {
   if (!SEANCE_ID) return null;
@@ -347,6 +457,53 @@ async function loadSeanceConfig() {
         try{ return JSON.parse(txt); }catch(e){ return null; }
       }catch(e){ return null; }
     }
+
+function applyPricing(pricing){
+
+  Object.entries(pricing).forEach(([range, rule]) => {
+
+    // пример ключа: P1-4
+    const zoneLetter = range[0];   // P / A / B
+    const rows = range.slice(1).split("-");
+    const from = Number(rows[0]);
+    const to   = Number(rows[1]);
+
+    for (let r = from; r <= to; r++) {
+
+      // перебираем ВСЕ кнопки мест
+      document.querySelectorAll(".seat").forEach(btn => {
+
+        const key = btn.dataset.key;   // например P1-M5
+        if (!key) return;
+
+        const m = key.match(/^([PAB])(\d+)-M(\d+)$/i);
+        if (!m) return;
+
+        const letter = m[1].toUpperCase();
+        const rowNum = Number(m[2]);
+
+        if (letter === zoneLetter && rowNum === r) {
+
+          btn.dataset.price = rule.price;
+
+          if (rule.sale) {
+            btn.style.background = rule.color;
+          } else {
+            btn.style.background = "#ccc";
+            btn.dataset.disabled = "true";
+          }
+
+        }
+
+      });
+
+    }
+
+  });
+
+}
+
+
 
     // --------- “оболочка кассы”: настройки + индикаторы + журнал ---------
     function fmtTime(ts){
@@ -447,7 +604,7 @@ async function loadSeanceConfig() {
       const dt = (date && time) ? ` • ${date} ${time}` : "";
 
       const t2 = String(time || "").replace(":", "-");
-      SEANCE_ID = (showSlug && date && t2) ? `${showSlug}-${date}-${t2}` : "";
+      
 
       const elShow = document.getElementById("summary-show");
       const elSeance = document.getElementById("summary-seance");
@@ -608,7 +765,7 @@ if (cfg && cfg.color) {
       if(btnSell) btnSell.disabled = false;
       if(btnRes)  btnRes.disabled  = false;
             // === SEND BASKET TO BACKOFFICE ===
-      if (window.parent && EMBED) {
+      if (window.parent && typeof EMBED !== "undefined" && EMBED) {
         window.parent.postMessage(
           {
             source: "hall-cash",
@@ -1034,21 +1191,26 @@ seatsRow.appendChild(
     modalBack?.addEventListener("click",(e)=>{ if(e.target===modalBack) closeModal(); });
    
     // ---- boot ----
-    (async ()=>{
-      
-      setCashierId(getCashierId());
-      
-  
+   function goBack(){
+  window.api.navigate("cashier/index.html");
+}
 
-CASH_PATCH = loadCashPatch();
+(async ()=>{
+  setCashierId(getCashierId());
+  CASH_PATCH = loadCashPatch();
 
-      renderParter();
-      renderLodges();
-      renderAmphi();
-      renderBalcony();
-      updateSummary();
-      renderCashLog();
-    })();
+  await initSeanceData();
+
+  renderParter();
+  renderLodges();
+  renderAmphi();
+  renderBalcony();
+
+  updateSummary();
+  renderCashLog();
+})();
+
+
   </script>
 </body>
 </html>
